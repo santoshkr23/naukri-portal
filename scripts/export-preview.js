@@ -11,7 +11,7 @@ fs.rmSync(OUT, { recursive: true, force: true });
 fs.mkdirSync(OUT, { recursive: true });
 
 (async () => {
-  require('../src/seed').seed();
+  require('../src/seed-jobs').seedJobs();
   const app = require('../src/server');
   const server = app.listen(0);
   const port = server.address().port;
@@ -32,7 +32,7 @@ fs.mkdirSync(OUT, { recursive: true });
       .replace(/<link rel="alternate"[^>]*>/, '').replace('<a href="/feed.xml">RSS Feed</a>', '')
       .replace(/href="(\/[a-z0-9-]*\/?)"/g, (m, href) => (pages[href] ? `href="${pages[href]}"` : pages[href + '/'] ? `href="${pages[href + '/']}"` : m))
       .replace('<form class="search" action="/search/"', '<form class="search" onsubmit="return false"')
-      .replace('<body>', '<body><div style="background:#f2a516;color:#0b3d3a;text-align:center;padding:6px 10px;font:600 14px system-ui">Design preview with sample posts — admin panel and auto-import run on the real server</div>');
+      .replace('<body>', '<body><div style="background:#f2a516;color:#0b3d3a;text-align:center;padding:6px 10px;font:600 14px system-ui">Preview — job facts as of 30 Oct 2026; always confirm on the official website. Admin panel and auto-import run on the real server</div>');
     fs.writeFileSync(path.join(OUT, file), html);
   }
   server.close();

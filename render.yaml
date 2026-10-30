@@ -16,8 +16,8 @@ services:
         sync: false        # Render will ask you to type it
       - key: SESSION_SECRET
         generateValue: true
-      - key: SEED_DEMO
-        value: "1"         # shows sample posts on an empty site; set to 0 once you have real posts
+      - key: SEED_JOBS
+        value: "1"         # adds the starter set of real open jobs (skips ones already present)
       - key: DATA_DIR
         value: ./data
     # For production (paid plan), keep the database across deploys:

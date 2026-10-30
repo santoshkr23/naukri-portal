@@ -8,6 +8,7 @@
     "dev": "node --watch src/server.js",
     "import:now": "node src/scraper/cli.js",
     "seed": "node src/seed.js",
+    "seed:jobs": "node src/seed-jobs.js",
     "export:preview": "node scripts/export-preview.js",
     "test": "node test/run.js"
   },
