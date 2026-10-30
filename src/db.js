@@ -72,6 +72,8 @@ const DEFAULT_SETTINGS = {
   home_intro: 'Fresh government job notifications, admit cards, results and answer keys — checked against official sources and updated every hour.',
   auto_publish: '1',
   auto_news: '1',
+  social_auto: '1',
+  social_per_run: '3',
   max_per_run: '10',
   first_run_limit: '5',
   telegram_url: '',

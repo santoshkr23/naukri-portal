@@ -211,7 +211,10 @@ function upsert(p, report) {
   report.updated.push(p.title);
 }
 
-async function importWorkbook(file = DEFAULT_FILE, { today = new Date().toISOString().slice(0, 10) } = {}) {
+// Bulk import: stories it creates are not auto-shared (use Admin → Posts → Share to social for those you want)
+function importWorkbook(...args) { return require('./social').quietly(() => importWorkbookNow(...args)); }
+
+async function importWorkbookNow(file = DEFAULT_FILE, { today = new Date().toISOString().slice(0, 10) } = {}) {
   const wb = new ExcelJS.Workbook();
   if (Buffer.isBuffer(file)) await wb.xlsx.load(file); else await wb.xlsx.readFile(file);
   const report = { created: [], updated: [], unchanged: [], drafts: [], skipped: [], sheets: [], closedTitles: [] };

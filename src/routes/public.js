@@ -9,6 +9,13 @@ const PAGES = require('../pages');
 const router = express.Router();
 const PER_PAGE = 30;
 
+router.get('/social/:file', (req, res, next) => {
+  if (!/^[a-z0-9-]+-(square|tall)-[0-9a-f]{8}\.jpg$/.test(req.params.file)) return next();
+  const f = require('path').join(require('../social/card').DIR, req.params.file);
+  if (!require('fs').existsSync(f)) return next();
+  res.set('Cache-Control', 'public, max-age=604800').type('jpg').sendFile(f);
+});
+
 router.get('/robots.txt', (req, res) => {
   res.type('text/plain').send(`User-agent: *\nAllow: /\nDisallow: /admin/\nDisallow: /search/\n\nSitemap: ${res.locals.baseUrl}/sitemap.xml\n`);
 });

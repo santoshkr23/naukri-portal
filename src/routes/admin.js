@@ -95,6 +95,13 @@ router.post('/posts/bulk', (req, res) => {
     return go(`${action === 'publish' ? 'Published' : 'Unpublished'} ${done} post${done === 1 ? '' : 's'}.` +
       (empty ? ` ${empty} not published because they have no dates or links yet — open them and fill them in first.` : ''));
   }
+  if (action === 'share') {
+    const news = social.newsIdsFor(ids);
+    const n = social.enqueue(news);
+    const ready = Object.keys(social.PLATFORMS).filter(p => social.cfg()[p].ready).length;
+    return go(ready ? `Queued ${n} news stor${n === 1 ? 'y' : 'ies'} for social media (${news.length - n} already queued). A few are posted every 5 minutes — see Social media.`
+      : 'No social account is set up yet — go to Social media first.');
+  }
   go('Choose an action.');
 });
 
@@ -206,6 +213,61 @@ router.post('/import', upload.single('file'), async (req, res) => {
     if (fresh.length) scraper.pingIndexNow(fresh).catch(() => {});
     res.render('admin/import', { report, hasFile: excel.hasDefaultFile(), msg: null });
   } catch (e) { res.render('admin/import', { report: null, hasFile: excel.hasDefaultFile(), msg: 'Import failed: ' + e.message }); }
+});
+
+// ---------- Social media ----------
+const social = require('../social');
+router.get('/social', (req, res) => {
+  const s = getSettings(), c = social.cfg();
+  const latest = db.prepare("SELECT id, slug, title FROM posts WHERE category='news' AND status='published' ORDER BY published_at DESC, id DESC LIMIT 1").get();
+  const logRows = db.prepare(`SELECT l.*, p.title, p.slug FROM social_log l LEFT JOIN posts p ON p.id=l.post_id ORDER BY l.id DESC LIMIT 60`).all();
+  const queued = db.prepare('SELECT COUNT(*) c FROM social_queue').get().c;
+  const fromEnv = Object.fromEntries(Object.values(social.PLATFORMS).flatMap(p => p.keys).map(k => [k, !s[k] && !!process.env[k.toUpperCase()]]));
+  res.render('admin/social', { s, c, PLATFORMS: social.PLATFORMS, SECRET: social.SECRET_KEYS, latest, logRows, queued, fromEnv, msg: req.query.msg,
+    baseUrl: process.env.BASE_URL || '' });
+});
+function saveSocial(req) {
+  for (const p of Object.keys(social.PLATFORMS)) {
+    setSetting(`${p}_enabled`, req.body[`${p}_enabled`] === '1' ? '1' : '0');
+    for (const k of social.PLATFORMS[p].keys) {
+      const v = String(req.body[k] ?? '').trim();
+      if (social.SECRET_KEYS.includes(k) && !v) continue; // blank secret field = keep the saved one
+      setSetting(k, v);
+    }
+  }
+  setSetting('social_auto', req.body.social_auto === '1' ? '1' : '0');
+  setSetting('social_per_run', String(Math.min(20, Math.max(1, +req.body.social_per_run || 3))));
+  setSetting('social_hashtags', String(req.body.social_hashtags || '').trim());
+  setSetting('graph_version', String(req.body.graph_version || '').trim());
+}
+router.post('/social', (req, res) => { saveSocial(req); res.redirect('/admin/social?msg=' + encodeURIComponent('Saved')); });
+router.post('/social/forget/:key', (req, res) => {
+  if (social.SECRET_KEYS.includes(req.params.key)) setSetting(req.params.key, '');
+  res.redirect('/admin/social?msg=' + encodeURIComponent('Removed'));
+});
+router.post('/social/check/:platform', async (req, res) => {
+  const p = req.params.platform;
+  if (!social.PLATFORMS[p]) return res.redirect('/admin/social');
+  if (req.body.tg_chats !== undefined) saveSocial(req); // "Save & check" sends the whole form
+  try { res.redirect('/admin/social?msg=' + encodeURIComponent(`✓ ${social.PLATFORMS[p].name} connected: ${await social.checkPlatform(p)}`)); }
+  catch (e) { res.redirect('/admin/social?msg=' + encodeURIComponent(`✗ ${social.PLATFORMS[p].name}: ${e.message}`)); }
+});
+router.post('/social/share/:id', async (req, res) => {
+  const [id] = social.newsIdsFor([+req.params.id]);
+  if (!id) return res.redirect('/admin/social?msg=' + encodeURIComponent('No published news story for that post.'));
+  const r = await social.sharePost(id, req.body.platform || undefined);
+  const txt = (r.results || []).map(x => `${social.PLATFORMS[x.platform].name}: ${x.ok ? 'posted' : x.error}`).join(' · ') || 'Already shared everywhere that is turned on.';
+  res.redirect('/admin/social?msg=' + encodeURIComponent(txt));
+});
+router.post('/social/run', async (req, res) => {
+  const r = await social.processQueue();
+  res.redirect('/admin/social?msg=' + encodeURIComponent(`Shared ${r.shared} stor${r.shared === 1 ? 'y' : 'ies'} from the queue.`));
+});
+router.get('/social/preview/:id/:kind.jpg', async (req, res, next) => {
+  const p = getById(+req.params.id);
+  if (!p || p.category !== 'news' || !['square', 'tall'].includes(req.params.kind)) return next();
+  const { file } = await require('../social/card').cardFile(p, req.params.kind);
+  res.type('jpg').sendFile(file);
 });
 
 // ---------- Settings & logs ----------

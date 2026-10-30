@@ -176,7 +176,9 @@ function ensureNewsFor(p) {
     return savePost({ ...post, slug: old.slug }, old.id);
   }
   if (post.status !== 'published') return null; // only make news for live posts
-  return savePost({ ...post, slug: `${s.keyword} news` });
+  const made = savePost({ ...post, slug: `${s.keyword} news` });
+  try { require('./social').onNewsCreated(made); } catch (e) { console.error('social:', e.message); }
+  return made;
 }
 
 // When the post it's about is unpublished, its auto news goes too
@@ -200,10 +202,12 @@ function backfillNews() {
     AND NOT EXISTS (SELECT 1 FROM posts n WHERE n.fingerprint = 'news:' || p.fingerprint)
     AND NOT EXISTS (SELECT 1 FROM deleted_posts x WHERE x.fingerprint = 'news:' || p.fingerprint) ORDER BY p.published_at, p.id`).all();
   let n = 0;
-  for (const r of rows) {
-    const made = ensureNewsFor(parsePost(r));
-    if (made) { db.prepare('UPDATE posts SET published_at=? WHERE id=?').run(r.published_at, made.id); n++; }
-  }
+  require('./social').quietlySync(() => {
+    for (const r of rows) {
+      const made = ensureNewsFor(parsePost(r));
+      if (made) { db.prepare('UPDATE posts SET published_at=? WHERE id=?').run(r.published_at, made.id); n++; }
+    }
+  });
   return n;
 }
 

@@ -1,5 +1,6 @@
-node_modules/
-data/
 .env
-test/out-*.html
+data/
+node_modules/
 preview/
+test/out-*
+test/out-*.html

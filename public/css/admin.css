@@ -67,3 +67,12 @@ th.ck,td.ck{width:34px;padding-right:0}
 .bulkbar .spacer{flex:1}
 .btn.danger{background:#b42318;color:#fff}
 .pager{display:flex;gap:16px;align-items:center;justify-content:center;margin:16px 0}
+/* Social media page */
+.social-prev{display:flex;gap:12px;align-items:flex-start;margin:8px 0 12px}
+.social-prev img{width:200px;border-radius:8px;border:1px solid #dbe4e1;display:block}
+.social-prev a:last-child img{width:134px}
+.social-card .sc-head{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.social-card .sc-head h2{margin:0}
+.social-card .sc-toggle{margin-left:auto;font-weight:700}
+.social-card details{margin-top:10px}.social-card details ol{margin:8px 0;padding-left:20px;line-height:1.6}
+.social-card .row{margin-top:6px}

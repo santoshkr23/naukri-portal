@@ -1,0 +1,119 @@
+<%- include('_top') %>
+<h1>Social media</h1>
+<p class="muted">Every new news story is posted automatically to the accounts you turn on below, with its image (Hindi headline) and the link to the story. A few are posted every 5 minutes so the accounts never send a burst. Stories added in bulk (Excel import) are not posted automatically — tick them in <a href="/admin/posts?category=news">Posts</a> and choose <strong>Share to social</strong>.</p>
+<% if (!baseUrl) { %><div class="flash err">Set <code>BASE_URL</code> to your site address (in Render → Environment, e.g. <code>https://naukri-portal-psva.onrender.com</code>). Links in social posts use it, and Instagram needs it to fetch the image.</div><% } %>
+
+<div class="two">
+  <section class="card">
+    <h2>Post image</h2>
+    <% if (latest) { %>
+      <p class="muted small">Made automatically for every story. Square for Instagram, Facebook, Telegram and X; tall for Pinterest. Latest story:</p>
+      <div class="social-prev">
+        <a href="/admin/social/preview/<%= latest.id %>/square.jpg" target="_blank"><img src="/admin/social/preview/<%= latest.id %>/square.jpg" alt="Square image"></a>
+        <a href="/admin/social/preview/<%= latest.id %>/tall.jpg" target="_blank"><img src="/admin/social/preview/<%= latest.id %>/tall.jpg" alt="Tall image"></a>
+      </div>
+      <form method="post" action="/admin/social/share/<%= latest.id %>" onsubmit="return confirm('Post this story now to every account that is turned on?')"><button class="btn ghost">Post this story now</button></form>
+    <% } else { %><p class="muted">No news stories yet.</p><% } %>
+  </section>
+  <section class="card">
+    <h2>Queue</h2>
+    <p><strong><%= queued %></strong> stor<%= queued === 1 ? 'y' : 'ies' %> waiting to be posted.</p>
+    <form method="post" action="/admin/social/run"><button class="btn ghost" <%= queued ? '' : 'disabled' %>>Post the next batch now</button></form>
+    <p class="muted small">If a platform fails, it is retried twice (after 30 and 60 minutes). Errors are listed under Activity.</p>
+  </section>
+</div>
+
+<form method="post" action="/admin/social" class="pform" autocomplete="off">
+  <section class="card">
+    <h2>General</h2>
+    <label class="check"><input type="checkbox" name="social_auto" value="1" <%= s.social_auto !== '0' ? 'checked' : '' %>> Post new news stories automatically</label>
+    <div class="grid3">
+      <label>Stories per batch (every 5 minutes)<input name="social_per_run" type="number" min="1" max="20" value="<%= s.social_per_run || 3 %>"></label>
+      <label>Hashtags added to every post<input name="social_hashtags" value="<%= s.social_hashtags ?? '#SarkariNaukri #GovtJobs #Naukri' %>"></label>
+      <label>Facebook/Instagram API version<input name="graph_version" value="<%= s.graph_version || '' %>" placeholder="v26.0"></label>
+    </div>
+  </section>
+
+  <% const field = (k, label, ph) => { const secret = SECRET.includes(k); const saved = !!(s[k] || fromEnv[k]); %>
+    <label><%= label %><% if (fromEnv[k]) { %> <span class="tag published">from environment</span><% } %>
+      <input name="<%= k %>" <%= secret ? 'type=password' : '' %> value="<%= secret ? '' : (s[k] || '') %>" placeholder="<%= secret && saved ? 'saved — leave blank to keep' : ph %>">
+    </label>
+  <% } %>
+
+  <% const card = (p, fields, help) => { const ok = c[p].ready; %>
+  <section class="card social-card">
+    <div class="sc-head">
+      <h2><%= PLATFORMS[p].name %></h2>
+      <span class="tag <%= ok ? 'published' : c[p].enabled ? 'err' : 'draft' %>"><%= ok ? 'on' : c[p].enabled ? 'missing details' : 'off' %></span>
+      <label class="check sc-toggle"><input type="checkbox" name="<%= p %>_enabled" value="1" <%= c[p].enabled ? 'checked' : '' %>> Post here</label>
+    </div>
+    <div class="grid2"><% fields.forEach(f => field(...f)) %></div>
+    <div class="row">
+      <button class="btn ghost" formaction="/admin/social/check/<%= p %>">Save &amp; check connection</button>
+      <span class="muted small">Checking only reads your account — nothing is posted.</span>
+    </div>
+    <details><summary>How to get these</summary><%- help %></details>
+  </section>
+  <% } %>
+
+  <% card('telegram', [['tg_token', 'Bot token', '123456789:AA…'], ['tg_chats', 'Channels / groups (comma-separated)', '@mychannel, -1001234567890']], `
+    <ol>
+      <li>In Telegram, open <strong>@BotFather</strong>, send <code>/newbot</code>, follow the steps and copy the <strong>token</strong>.</li>
+      <li>Add the bot to your channel or group as an <strong>admin</strong> with permission to <strong>post messages</strong>.</li>
+      <li>Public channel: enter its username, e.g. <code>@naukrisetu</code>. Private channel or group: post any message there, open <code>https://api.telegram.org/bot&lt;TOKEN&gt;/getUpdates</code> and copy the <code>chat.id</code> (starts with <code>-100</code>).</li>
+    </ol>`) %>
+
+  <% card('facebook', [['fb_page_id', 'Page ID', '1234567890'], ['fb_token', 'Page access token', 'EAAG…']], `
+    <ol>
+      <li>Create an app at <strong>developers.facebook.com</strong> (type: Business) and add the permissions <code>pages_manage_posts</code> and <code>pages_read_engagement</code>. Switch the app to <strong>Live</strong>.</li>
+      <li>In the <strong>Graph API Explorer</strong>, choose your app, click <em>Get Page Access Token</em> and pick your Page. Then open <code>/me/accounts</code> — it lists each Page's <strong>id</strong> and <strong>access_token</strong>.</li>
+      <li>Use a long-lived token: extend the user token in the <em>Access Token Debugger</em> first, then call <code>/me/accounts</code> again. Page tokens made from a long-lived user token don't expire.</li>
+      <li>Facebook allows about 25 posts per Page per day.</li>
+    </ol>`) %>
+
+  <% card('instagram', [['ig_user_id', 'Instagram account ID', '1784…'], ['ig_token', 'Access token (the Page token)', 'EAAG…']], `
+    <ol>
+      <li>Your Instagram must be a <strong>Professional</strong> (Business or Creator) account linked to your Facebook Page.</li>
+      <li>In the same Facebook app add <code>instagram_basic</code> and <code>instagram_content_publish</code>, and generate the Page token again.</li>
+      <li>Find the account ID: in the Graph API Explorer run <code>&lt;page-id&gt;?fields=instagram_business_account</code>.</li>
+      <li>Instagram fetches the image from your site, so <code>BASE_URL</code> must be your public <code>https://</code> address. Links in Instagram captions aren't clickable — put your site link in your profile bio.</li>
+    </ol>`) %>
+
+  <% card('pinterest', [['pin_token', 'Access token', 'pina_…'], ['pin_board', 'Board ID', 'leave blank and click Check to list your boards']], `
+    <ol>
+      <li>Use a Pinterest <strong>business</strong> account. Create an app at <strong>developers.pinterest.com</strong> and generate an access token with <code>boards:read</code>, <code>pins:read</code> and <code>pins:write</code>.</li>
+      <li>Leave Board ID blank and click <em>Save &amp; check connection</em> — your boards and their IDs are listed.</li>
+      <li>New apps start with <strong>trial access</strong>: pins are created but only you can see them until Pinterest approves <em>standard access</em> for your app. Tokens expire after 30 days — paste a new one when they do.</li>
+    </ol>`) %>
+
+  <% card('twitter', [['x_api_key', 'API key', ''], ['x_api_secret', 'API key secret', ''], ['x_access_token', 'Access token', ''], ['x_access_secret', 'Access token secret', '']], `
+    <ol>
+      <li>Sign in at <strong>developer.x.com</strong>, create a project and app.</li>
+      <li>In the app's <em>User authentication settings</em> set permissions to <strong>Read and write</strong>.</li>
+      <li>Under <em>Keys and tokens</em> copy the <strong>API key and secret</strong>, then generate the <strong>Access token and secret</strong> (generate them <em>after</em> setting Read and write, or posting is refused).</li>
+      <li>X charges for API posting (pay-per-use, about $0.01 per post as of early 2026), so add credit to your developer account.</li>
+    </ol>`) %>
+
+  <p class="muted small">Tip: on hosts that wipe the database on every deploy (Render free plan), add these as environment variables instead — same names in capitals, e.g. <code>TG_TOKEN</code>, <code>TG_CHATS</code>, <code>TELEGRAM_ENABLED=1</code>, <code>FB_PAGE_ID</code>, <code>FB_TOKEN</code>, <code>FACEBOOK_ENABLED=1</code>.</p>
+  <button class="btn">Save</button>
+</form>
+
+<section class="card flush" style="margin-top:16px">
+  <h2 class="pad" style="margin:0">Activity</h2>
+  <table>
+    <thead><tr><th>When (UTC)</th><th>Story</th><th>Platform</th><th>Result</th><th></th></tr></thead>
+    <tbody>
+    <% logRows.forEach(l => { %>
+      <tr>
+        <td class="nowrap small"><%= l.created_at %></td>
+        <td><% if (l.slug) { %><a href="/<%= l.slug %>/" target="_blank"><%= l.title %></a><% } else { %><span class="muted">deleted</span><% } %></td>
+        <td class="nowrap"><%= PLATFORMS[l.platform]?.name %></td>
+        <td><% if (l.status === 'ok') { %><span class="tag published">posted</span> <% String(l.url || '').split(' ').filter(u => /^https?:/.test(u)).forEach(u => { %><a class="small" href="<%= u %>" target="_blank" rel="noopener">open ↗</a> <% }) %><% } else { %><span class="tag err">failed</span> <span class="small"><%= l.error %></span><% } %></td>
+        <td><% if (l.status !== 'ok' && l.slug) { %><form method="post" action="/admin/social/share/<%= l.post_id %>"><input type="hidden" name="platform" value="<%= l.platform %>"><button class="linkbtn">Retry</button></form><% } %></td>
+      </tr>
+    <% }) %>
+    </tbody>
+  </table>
+  <% if (!logRows.length) { %><p class="muted pad">Nothing posted yet.</p><% } %>
+</section>
+<%- include('_bottom') %>

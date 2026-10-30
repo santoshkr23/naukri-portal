@@ -61,7 +61,8 @@ function buildPost(j) {
   };
 }
 
-function seedJobs() {
+function seedJobs() { return require('./social').quietlySync(seedJobsNow); }
+function seedJobsNow() {
   const has = db.prepare('SELECT 1 FROM posts WHERE fingerprint=?1 UNION SELECT 1 FROM deleted_posts WHERE fingerprint=?1');
   let n = 0;
   for (const j of JOBS) {
