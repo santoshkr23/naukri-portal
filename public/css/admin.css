@@ -76,3 +76,10 @@ th.ck,td.ck{width:34px;padding-right:0}
 .social-card .sc-toggle{margin-left:auto;font-weight:700}
 .social-card details{margin-top:10px}.social-card details ol{margin:8px 0;padding-left:20px;line-height:1.6}
 .social-card .row{margin-top:6px}
+.status-list ul{list-style:none;margin:0;padding:0}
+.status-list li{padding:8px 0 8px 30px;border-bottom:1px solid #eef3f1;position:relative;line-height:1.5}
+.status-list li:last-child{border:0}
+.status-list li::before{position:absolute;left:4px;top:8px;font-weight:800}
+.status-list li.ok::before{content:"✓";color:#15803d}
+.status-list li.bad::before{content:"✗";color:#b42318}
+.status-list li.warn::before{content:"!";color:#b45309;left:9px}

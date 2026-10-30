@@ -224,7 +224,10 @@ router.get('/social', (req, res) => {
   const queued = db.prepare('SELECT COUNT(*) c FROM social_queue').get().c;
   const fromEnv = Object.fromEntries(Object.values(social.PLATFORMS).flatMap(p => p.keys).map(k => [k, !s[k] && !!process.env[k.toUpperCase()]]));
   res.render('admin/social', { s, c, PLATFORMS: social.PLATFORMS, SECRET: social.SECRET_KEYS, latest, logRows, queued, fromEnv, msg: req.query.msg,
-    baseUrl: process.env.BASE_URL || '' });
+    baseUrl: require('../db').siteUrl(), baseFrom: process.env.BASE_URL ? 'BASE_URL' : process.env.RENDER_EXTERNAL_URL ? 'Render' : s.site_url ? 'detected' : '',
+    lastOk: db.prepare("SELECT created_at FROM social_log WHERE status='ok' ORDER BY id DESC LIMIT 1").get()?.created_at,
+    lastErr: db.prepare("SELECT created_at, platform, error FROM social_log WHERE status='error' ORDER BY id DESC LIMIT 1").get(),
+    upSince: new Date(Date.now() - process.uptime() * 1000).toISOString().replace('T', ' ').slice(0, 16) });
 });
 function saveSocial(req) {
   for (const p of Object.keys(social.PLATFORMS)) {
@@ -236,6 +239,7 @@ function saveSocial(req) {
     }
   }
   setSetting('social_auto', req.body.social_auto === '1' ? '1' : '0');
+  setSetting('social_excel', req.body.social_excel === '1' ? '1' : '0');
   setSetting('social_per_run', String(Math.min(20, Math.max(1, +req.body.social_per_run || 3))));
   setSetting('social_hashtags', String(req.body.social_hashtags || '').trim());
   setSetting('graph_version', String(req.body.graph_version || '').trim());

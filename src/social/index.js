@@ -5,7 +5,7 @@
 const fs = require('fs');
 const crypto = require('crypto');
 const cron = require('node-cron');
-const { db, getSettings, parsePost, log } = require('../db');
+const { db, getSettings, parsePost, log, siteUrl } = require('../db');
 const { cardFile } = require('./card');
 
 db.exec(`
@@ -27,7 +27,7 @@ function cfg() {
   const s = getSettings();
   const v = k => (s[k] || process.env[k.toUpperCase()] || '').trim();
   const c = { auto: s.social_auto === '1', perRun: Math.max(1, +s.social_per_run || 3), hashtags: s.social_hashtags ?? '#SarkariNaukri #GovtJobs #Naukri',
-    graph: v('graph_version') || 'v26.0', base: (process.env.BASE_URL || '').replace(/\/$/, '') };
+    graph: v('graph_version') || 'v26.0', base: siteUrl(), excel: s.social_excel !== '0' };
   for (const [p, def] of Object.entries(PLATFORMS)) {
     c[p] = { enabled: s[`${p}_enabled`] === '1' || process.env[`${p.toUpperCase()}_ENABLED`] === '1' };
     for (const k of def.keys) c[p][k] = v(k);
@@ -47,9 +47,11 @@ function onNewsCreated(news) {
   if (!c.auto || !Object.keys(PLATFORMS).some(p => c[p].ready)) return;
   enqueue([news.id]);
 }
+let soon = null;
 function enqueue(ids) {
   const ins = db.prepare('INSERT OR IGNORE INTO social_queue(post_id) VALUES(?)');
   let n = 0; for (const id of ids) n += ins.run(id).changes;
+  if (n && !soon && process.env.SCHEDULER_ENABLED !== '0') soon = setTimeout(() => { soon = null; processQueue().catch(e => log('error', 'Social queue: ' + e.message)); }, 15000);
   return n;
 }
 // Accepts any posts: a job/result post is shared through its news story
@@ -124,6 +126,7 @@ const POSTERS = {
       const fd = new FormData();
       fd.append('chat_id', chat); fd.append('photo', fileBlob(img.square.file), img.square.name);
       fd.append('caption', caption.length > 1024 ? caption.slice(0, 1000) + '…' : caption); fd.append('parse_mode', 'HTML');
+      fd.append('reply_markup', JSON.stringify({ inline_keyboard: [[{ text: '📰 पूरी खबर पढ़ें', url: p.link }]] }));
       const r = await call(`https://api.telegram.org/bot${c.telegram.tg_token}/sendPhoto`, { method: 'POST', body: fd });
       const ch = r.result?.chat;
       urls.push(ch?.username ? `https://t.me/${ch.username}/${r.result.message_id}` : `${chat} #${r.result?.message_id}`);
@@ -227,7 +230,12 @@ async function sharePost(postId, only) {
   const done = new Set(db.prepare("SELECT platform FROM social_log WHERE post_id=? AND status='ok'").all(postId).map(r => r.platform));
   const targets = Object.keys(PLATFORMS).filter(p => c[p].ready && !done.has(p) && (!only || only === p));
   if (!targets.length) return { results: [] };
-  if (!c.base && targets.some(p => p !== 'telegram')) log('warn', 'Social: BASE_URL is not set — links in posts will be relative');
+  if (!/^https?:\/\//.test(c.base)) {
+    const msg = 'site address unknown, so the post would have no link — set BASE_URL in Render → Environment (e.g. https://your-site.onrender.com)';
+    for (const p of targets) db.prepare('INSERT INTO social_log(post_id,platform,status,error) VALUES(?,?,?,?)').run(postId, p, 'error', msg);
+    log('error', 'Social: ' + msg);
+    return { results: targets.map(p => ({ platform: p, ok: false, error: msg })) };
+  }
   const img = { square: await cardFile(news, 'square'), tall: await cardFile(news, 'tall') };
   const results = [];
   for (const p of targets) {
@@ -266,6 +274,7 @@ async function processQueue(limit) {
 function startWorker() {
   if (process.env.SCHEDULER_ENABLED === '0') return;
   cron.schedule('*/5 * * * *', () => processQueue().catch(e => log('error', 'Social queue: ' + e.message)), { timezone: 'Asia/Kolkata' });
+  setTimeout(() => processQueue().catch(e => log('error', 'Social queue: ' + e.message)), 60000); // after waking up
 }
 
 module.exports = { PLATFORMS, SECRET_KEYS, cfg, quietly, quietlySync, onNewsCreated, enqueue, newsIdsFor, sharePost, processQueue, checkPlatform, startWorker };

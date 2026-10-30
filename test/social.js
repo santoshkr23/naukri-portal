@@ -64,12 +64,40 @@ const mock = http.createServer((req, res) => {
   const len = tweet.text.replace(/https?:\/\/\S+/g, 'x'.repeat(23)).length; assert.ok(len <= 280, 'tweet fits 280: ' + len);
   console.log('Tweet:', tweet.text.replace(/\n/g, ' | '));
 
+  // the link is also a button under the Telegram post
+  assert.ok(tg.body.toString().includes('"inline_keyboard"') && tg.body.toString().includes('rrb-technician-answer-key-2026-news/'), 'telegram has a link button');
+
+  // no site address at all -> nothing is posted without a link
+  const saved = process.env.BASE_URL; delete process.env.BASE_URL; delete process.env.RENDER_EXTERNAL_URL; setSetting('site_url', '');
+  const job2 = savePost({ title: 'SSC CGL Admit Card 2026: Download', category: 'admit-card', status: 'published', data: { intro: 'x', dates: [['Admit card released', '1 November 2026']], links: [['SSC', 'https://ssc.gov.in/']] } });
+  const news2 = db.prepare('SELECT id FROM posts WHERE fingerprint=?').get('news:' + job2.fingerprint);
+  const blocked = await social.sharePost(news2.id);
+  assert.ok(blocked.results.every(r => !r.ok && /site address unknown/.test(r.error)), 'posting blocked without a site address');
+  // Render's own variable is enough
+  process.env.RENDER_EXTERNAL_URL = 'https://my-site.onrender.com';
+  const n0 = seen.length; await social.sharePost(news2.id, 'telegram');
+  assert.ok(seen.slice(n0).some(x => x.body.toString().includes('https://my-site.onrender.com/ssc-cgl-admit-card-2026-news/')), 'uses RENDER_EXTERNAL_URL');
+  process.env.BASE_URL = saved; delete process.env.RENDER_EXTERNAL_URL;
+  db.prepare('DELETE FROM social_queue').run();
+
   // already posted -> sharing again does nothing; the image file is served publicly
   const again = await social.sharePost(news.id); assert.strictEqual(again.results.length, 0, 'no double posting');
   const app = require('../src/server'); const srv = app.listen(4812);
   const img = await fetch('http://localhost:4812/social/' + igBody.image_url.split('/social/')[1]);
   assert.strictEqual(img.status, 200); assert.strictEqual(img.headers.get('content-type'), 'image/jpeg');
   fs.writeFileSync(path.join(__dirname, 'out-social.jpg'), Buffer.from(await img.arrayBuffer()));
+  // Excel: first import into an empty database posts nothing; a new row in a later import is queued
+  const xl = require('../src/excel-import');
+  db.prepare('DELETE FROM posts').run();
+  await xl.importWorkbook();
+  assert.strictEqual(db.prepare('SELECT COUNT(*) c FROM social_queue').get().c, 0, 'fresh-database import does not flood social');
+  const one = db.prepare("SELECT id, fingerprint FROM posts WHERE category='latest-jobs' AND status='published' LIMIT 1").get();
+  db.prepare('DELETE FROM posts WHERE id=? OR fingerprint=?').run(one.id, 'news:' + one.fingerprint); // as if the row were newly added to the sheet
+  const r2 = await xl.importWorkbook();
+  assert.strictEqual(r2.created.length, 1);
+  assert.strictEqual(db.prepare('SELECT COUNT(*) c FROM social_queue').get().c, 1, 'new Excel row is queued for social');
+  console.log('Excel: fresh import queued 0, new row queued 1');
+
   srv.close(); mock.close();
   console.log('SOCIAL TESTS PASSED'); process.exit(0);
 })().catch(e => { console.error('SOCIAL TEST FAILED:', e.message); process.exit(1); });

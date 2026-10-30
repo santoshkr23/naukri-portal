@@ -74,6 +74,7 @@ const DEFAULT_SETTINGS = {
   auto_news: '1',
   social_auto: '1',
   social_per_run: '3',
+  social_excel: '1',
   max_per_run: '10',
   first_run_limit: '5',
   telegram_url: '',
@@ -122,4 +123,10 @@ function parsePost(row) {
   return { ...row, data };
 }
 
-module.exports = { db, DATA_DIR, getSettings, setSetting, log, CATEGORIES, parsePost };
+// Public address of the site: BASE_URL, else the one Render provides, else the address the site was last opened at
+function siteUrl() {
+  const u = process.env.BASE_URL || process.env.RENDER_EXTERNAL_URL || getSettings().site_url || '';
+  return u.replace(/\/$/, '');
+}
+
+module.exports = { siteUrl, db, DATA_DIR, getSettings, setSetting, log, CATEGORIES, parsePost };

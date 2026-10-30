@@ -4,7 +4,7 @@
 const fs = require('fs');
 const path = require('path');
 const sharp = require('sharp');
-const { DATA_DIR, getSettings } = require('../db');
+const { DATA_DIR, getSettings, siteUrl } = require('../db');
 
 const FONT_BOLD = path.join(__dirname, '..', '..', 'assets', 'fonts', 'Hind-Bold.ttf');
 const FONT_SEMI = path.join(__dirname, '..', '..', 'assets', 'fonts', 'Hind-SemiBold.ttf');
@@ -49,7 +49,7 @@ async function render(news, kind) {
   const s = getSettings();
   const d = news.data || {};
   const site = s.site_name || 'NaukriSetu';
-  const domain = hostOf(process.env.BASE_URL || '') || site;
+  const domain = hostOf(siteUrl()) || site;
   const pad = 60, top = 150, footer = 150;
   const points = ((d.extra || [])[0]?.items || []).slice(0, kind === 'tall' ? 3 : 2);
 

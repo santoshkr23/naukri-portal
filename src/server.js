@@ -23,6 +23,15 @@ app.use((req, res, next) => {
   next();
 });
 
+// Remember the public address the site is reached at (used for links in social posts when BASE_URL isn't set)
+let knownUrl = null;
+app.use((req, res, next) => {
+  if (!process.env.BASE_URL && !process.env.RENDER_EXTERNAL_URL && !/^(localhost|127\.|\[::1\]|0\.0\.0\.0)/.test(req.hostname)) {
+    const u = `${req.protocol}://${req.get('host')}`;
+    if (u !== knownUrl) { knownUrl = u; if (getSettings().site_url !== u) require('./db').setSetting('site_url', u); }
+  }
+  next();
+});
 app.use((req, res, next) => {
   res.locals.settings = getSettings();
   res.locals.baseUrl = (process.env.BASE_URL || `${req.protocol}://${req.get('host')}`).replace(/\/$/, '');

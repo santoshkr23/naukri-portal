@@ -1,7 +1,19 @@
 <%- include('_top') %>
 <h1>Social media</h1>
-<p class="muted">Every new news story is posted automatically to the accounts you turn on below, with its image (Hindi headline) and the link to the story. A few are posted every 5 minutes so the accounts never send a burst. Stories added in bulk (Excel import) are not posted automatically — tick them in <a href="/admin/posts?category=news">Posts</a> and choose <strong>Share to social</strong>.</p>
-<% if (!baseUrl) { %><div class="flash err">Set <code>BASE_URL</code> to your site address (in Render → Environment, e.g. <code>https://naukri-portal-psva.onrender.com</code>). Links in social posts use it, and Instagram needs it to fetch the image.</div><% } %>
+<p class="muted">Every new news story is posted automatically to the accounts you turn on below, with its image (Hindi headline) and the link to the story. A few are posted every 5 minutes so the accounts never send a burst. To post older stories, tick them in <a href="/admin/posts?category=news">Posts</a> and choose <strong>Share to social</strong>.</p>
+<% const ready = Object.keys(PLATFORMS).filter(p => c[p].ready); %>
+<section class="card status-list">
+  <h2>Status — why a story is or isn't posted</h2>
+  <ul>
+    <li class="<%= baseUrl ? 'ok' : 'bad' %>"><strong>Link in posts:</strong> <% if (baseUrl) { %><code><%= baseUrl %>/…</code> <span class="muted small">(<%= { BASE_URL: 'from BASE_URL', Render: 'address provided by Render', detected: 'detected from your visits — set BASE_URL to be sure' }[baseFrom] %>)</span><% } else { %>unknown — posts are blocked until you set <code>BASE_URL</code> in Render → Environment<% } %></li>
+    <li class="<%= ready.length ? 'ok' : 'bad' %>"><strong>Accounts turned on and filled in:</strong> <%= ready.length ? ready.map(p => PLATFORMS[p].name).join(', ') : 'none yet — fill in a platform below and tick “Post here”' %></li>
+    <li class="<%= c.auto ? 'ok' : 'bad' %>"><strong>Auto-posting new stories:</strong> <%= c.auto ? 'on' : 'off (turn on under General)' %></li>
+    <li class="<%= c.excel ? 'ok' : 'warn' %>"><strong>New rows from Excel imports:</strong> <%= c.excel ? 'posted automatically (not on a fresh, empty database, so a redeploy never re-posts everything)' : 'not posted — tick it under General, or use Posts → Share to social' %></li>
+    <li class="<%= queued ? 'warn' : 'ok' %>"><strong>Queue:</strong> <%= queued %> waiting<%= queued ? ' — they go out within a minute while the site is awake' : '' %></li>
+    <li class="<%= lastErr && (!lastOk || lastErr.created_at > lastOk) ? 'bad' : 'ok' %>"><strong>Last post:</strong> <%= lastOk ? lastOk + ' UTC' : 'none yet' %><% if (lastErr && (!lastOk || lastErr.created_at > lastOk)) { %> · <strong>last error</strong> (<%= PLATFORMS[lastErr.platform]?.name %>): <%= lastErr.error %><% } %></li>
+    <li class="warn"><strong>Server awake since:</strong> <%= upSince %> UTC. On Render's free plan the site sleeps after 15 minutes with no visitors, and nothing is posted while it sleeps. A free uptime monitor (e.g. UptimeRobot pinging your site every 10 minutes) keeps it awake.</li>
+  </ul>
+</section>
 
 <div class="two">
   <section class="card">
@@ -27,6 +39,7 @@
   <section class="card">
     <h2>General</h2>
     <label class="check"><input type="checkbox" name="social_auto" value="1" <%= s.social_auto !== '0' ? 'checked' : '' %>> Post new news stories automatically</label>
+    <label class="check"><input type="checkbox" name="social_excel" value="1" <%= s.social_excel !== '0' ? 'checked' : '' %>> Also post new rows added through Excel imports</label>
     <div class="grid3">
       <label>Stories per batch (every 5 minutes)<input name="social_per_run" type="number" min="1" max="20" value="<%= s.social_per_run || 3 %>"></label>
       <label>Hashtags added to every post<input name="social_hashtags" value="<%= s.social_hashtags ?? '#SarkariNaukri #GovtJobs #Naukri' %>"></label>

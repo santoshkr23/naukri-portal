@@ -212,7 +212,14 @@ function upsert(p, report) {
 }
 
 // Bulk import: stories it creates are not auto-shared (use Admin → Posts → Share to social for those you want)
-function importWorkbook(...args) { return require('./social').quietly(() => importWorkbookNow(...args)); }
+function importWorkbook(...args) {
+  const firstImport = !db.prepare("SELECT 1 FROM posts WHERE category<>'news' LIMIT 1").get();
+  const social = require('./social');
+  // New rows are posted to social media like any new post — except when the database is empty
+  // (a fresh deploy), where every row looks new and would flood the accounts.
+  if (firstImport || !social.cfg().excel) return social.quietly(() => importWorkbookNow(...args));
+  return importWorkbookNow(...args);
+}
 
 async function importWorkbookNow(file = DEFAULT_FILE, { today = new Date().toISOString().slice(0, 10) } = {}) {
   const wb = new ExcelJS.Workbook();
