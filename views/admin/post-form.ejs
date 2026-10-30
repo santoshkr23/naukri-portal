@@ -45,7 +45,7 @@
   </div>
   <div class="row sticky">
     <button class="btn">Save</button>
-    <% if (post.id) { %><a class="btn ghost" href="/<%= post.slug %>/?preview=1" target="_blank">Preview ↗</a><% } %>
+    <% if (post.id) { %><a class="btn ghost" href="/admin/posts/<%= post.id %>/preview" target="_blank">Preview ↗</a><% } %>
   </div>
 </form>
 <%- include('_bottom') %>

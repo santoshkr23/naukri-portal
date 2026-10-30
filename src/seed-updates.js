@@ -83,7 +83,7 @@ function buildUpdate(u) {
 }
 
 function seedUpdates() {
-  const has = db.prepare('SELECT 1 FROM posts WHERE fingerprint=?');
+  const has = db.prepare('SELECT 1 FROM posts WHERE fingerprint=?1 UNION SELECT 1 FROM deleted_posts WHERE fingerprint=?1');
   let n = 0;
   for (const u of UPDATES) {
     const p = buildUpdate(u);

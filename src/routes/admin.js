@@ -31,15 +31,77 @@ router.get('/', (req, res) => {
 });
 
 // ---------- Posts ----------
-router.get('/posts', (req, res) => {
-  const { status = '', category = '', q = '' } = req.query;
+const PAGE_SIZE = 100;
+// Shared by the list and the bulk actions, so "select all matching" acts on exactly what the filters show
+function postFilter(f) {
   const where = [], args = [];
-  if (status) { where.push('status=?'); args.push(status); }
-  if (category) { where.push('category=?'); args.push(category); }
-  if (q) { where.push('title LIKE ?'); args.push(`%${q}%`); }
-  const rows = db.prepare(`SELECT id,slug,title,category,status,source_url,created_at,published_at FROM posts
-    ${where.length ? 'WHERE ' + where.join(' AND ') : ''} ORDER BY id DESC LIMIT 300`).all(...args);
-  res.render('admin/posts', { rows, filters: { status, category, q }, msg: req.query.msg });
+  if (f.status === 'published' || f.status === 'draft') { where.push('status=?'); args.push(f.status); }
+  if (f.category) { where.push('category=?'); args.push(f.category); }
+  if (f.source === 'auto') where.push('source_url IS NOT NULL');
+  if (f.source === 'sheet') where.push('source_url IS NULL');
+  if (f.issue === 'empty') where.push(`data LIKE '%"dates":[]%' AND data LIKE '%"links":[]%'`);
+  if (f.issue === 'nodates') where.push(`data LIKE '%"dates":[]%'`);
+  if (f.issue === 'closed') where.push("category='latest-jobs' AND last_date IS NOT NULL AND last_date < date('now','localtime')");
+  if (f.q) { where.push('(title LIKE ? OR organization LIKE ?)'); args.push(`%${f.q}%`, `%${f.q}%`); }
+  return { sql: where.length ? 'WHERE ' + where.join(' AND ') : '', args };
+}
+const readFilters = src => ({ status: src.status || '', category: src.category || '', source: src.source || '', issue: src.issue || '', q: String(src.q || '').trim() });
+
+router.get('/posts', (req, res) => {
+  const filters = readFilters(req.query);
+  const page = Math.max(1, parseInt(req.query.page) || 1);
+  const w = postFilter(filters);
+  const total = db.prepare(`SELECT COUNT(*) c FROM posts ${w.sql}`).get(...w.args).c;
+  const rows = db.prepare(`SELECT id,slug,title,category,status,source_url,last_date,created_at,published_at,
+      (data LIKE '%"dates":[]%' AND data LIKE '%"links":[]%') AS empty FROM posts ${w.sql} ORDER BY id DESC LIMIT ? OFFSET ?`)
+    .all(...w.args, PAGE_SIZE, (page - 1) * PAGE_SIZE);
+  // counts for the status tabs, with the other filters applied
+  const tabCount = st => { const x = postFilter({ ...filters, status: st }); return db.prepare(`SELECT COUNT(*) c FROM posts ${x.sql}`).get(...x.args).c; };
+  const counts = { all: tabCount(''), published: tabCount('published'), draft: tabCount('draft') };
+  const qs = extra => new URLSearchParams(Object.entries({ ...filters, ...extra }).filter(([, v]) => v !== '' && v != null)).toString();
+  res.render('admin/posts', { rows, filters, counts, total, page, pages: Math.max(1, Math.ceil(total / PAGE_SIZE)), qs, msg: req.query.msg,
+    today: new Date().toISOString().slice(0, 10) });
+});
+
+function deletePosts(ids) {
+  const get = db.prepare('SELECT title, fingerprint FROM posts WHERE id=?');
+  const remember = db.prepare('INSERT OR REPLACE INTO deleted_posts(fingerprint,title) VALUES(?,?)');
+  const unlink = db.prepare('UPDATE seen_urls SET post_id=NULL WHERE post_id=?');
+  const del = db.prepare('DELETE FROM posts WHERE id=?');
+  db.transaction(list => { for (const id of list) { const p = get.get(id); if (!p) continue; if (p.fingerprint) remember.run(p.fingerprint, p.title); unlink.run(id); del.run(id); } })(ids);
+}
+
+router.post('/posts/bulk', (req, res) => {
+  const back = '/admin/posts' + (req.body.back ? '?' + String(req.body.back).replace(/(^|&)msg=[^&]*/g, '') : '');
+  const go = msg => res.redirect(back + (back.includes('?') ? '&' : '?') + 'msg=' + encodeURIComponent(msg));
+  let ids;
+  if (req.body.all === '1') {
+    const w = postFilter(readFilters(req.body));
+    ids = db.prepare(`SELECT id FROM posts ${w.sql}`).all(...w.args).map(r => r.id);
+  } else ids = [].concat(req.body.ids || []).map(Number).filter(Boolean);
+  if (!ids.length) return go('Tick at least one post first.');
+
+  const action = req.body.action;
+  if (action === 'delete') { deletePosts(ids); return go(`Deleted ${ids.length} post${ids.length > 1 ? 's' : ''}.`); }
+  if (action === 'publish' || action === 'draft') {
+    let done = 0, empty = 0; const live = [];
+    for (const id of ids) {
+      const p = getById(id); if (!p || p.status === action || (action === 'draft' && p.status !== 'published')) continue;
+      if (action === 'publish' && !(p.data.dates || []).length && !(p.data.links || []).length) { empty++; continue; } // nothing to show yet
+      const saved = savePost({ ...p, status: action === 'publish' ? 'published' : 'draft' }, id); done++;
+      if (action === 'publish') live.push(saved.slug);
+    }
+    if (live.length) scraper.pingIndexNow(live).catch(() => {});
+    return go(`${action === 'publish' ? 'Published' : 'Unpublished'} ${done} post${done === 1 ? '' : 's'}.` +
+      (empty ? ` ${empty} not published because they have no dates or links yet — open them and fill them in first.` : ''));
+  }
+  go('Choose an action.');
+});
+
+router.get('/posts/:id/preview', (req, res, next) => {
+  const post = getById(+req.params.id);
+  if (!post) return next();
+  require('./public').renderPost(res, post);
 });
 
 const blank = { id: null, title: '', slug: '', category: 'latest-jobs', organization: '', total_posts: '', meta_description: '', status: 'draft', featured: 0,
@@ -84,13 +146,13 @@ router.post('/posts/save', (req, res) => {
 });
 router.post('/posts/:id/status', (req, res) => {
   const post = getById(+req.params.id);
-  if (post) savePost({ ...post, status: req.body.status === 'published' ? 'published' : 'draft' }, post.id);
-  res.redirect(req.get('referer') || '/admin/posts');
+  const to = (req.query.to || req.body.status) === 'published' ? 'published' : 'draft';
+  if (post) savePost({ ...post, status: to }, post.id);
+  res.redirect('/admin/posts' + (req.body.back ? '?' + req.body.back : ''));
 });
 router.post('/posts/:id/delete', (req, res) => {
-  db.prepare('UPDATE seen_urls SET post_id=NULL WHERE post_id=?').run(+req.params.id);
-  db.prepare('DELETE FROM posts WHERE id=?').run(+req.params.id);
-  res.redirect('/admin/posts?msg=Deleted');
+  deletePosts([+req.params.id]);
+  res.redirect('/admin/posts' + (req.body.back ? '?' + String(req.body.back).replace(/(^|&)msg=[^&]*/g, '') + '&' : '?') + 'msg=Deleted');
 });
 
 // ---------- Sources ----------

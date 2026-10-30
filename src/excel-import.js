@@ -202,6 +202,7 @@ const nearMatch = (title, category, extraTitles = []) =>
 
 function upsert(p, report) {
   p.fingerprint = fingerprint(p.base, p.category);
+  if (db.prepare('SELECT 1 FROM deleted_posts WHERE fingerprint=?').get(p.fingerprint)) { report.skipped.push(`${p.base}: deleted in admin`); return; }
   const old = db.prepare('SELECT * FROM posts WHERE fingerprint=?').get(p.fingerprint);
   if (!old) { savePost(p); report.created.push(p.title); return; }
   const same = old.title === p.title && old.data === JSON.stringify(p.data) && old.status === p.status && (old.last_date || null) === (p.last_date || null);
@@ -248,7 +249,7 @@ function todoRow(row, col, report) {
   if (!category) { report.skipped.push(`${title}: unknown section "${t(/^section/)}"`); return; }
   // Words in brackets matter here: "Combined JE (Electrical)" and "Combined JE (Mechanical)" are two different drafts
   const fp = fingerprint(title.replace(/[()]/g, ' '), category);
-  if (db.prepare('SELECT 1 FROM posts WHERE fingerprint=?').get(fp) ||
+  if (db.prepare('SELECT 1 FROM posts WHERE fingerprint=? UNION SELECT 1 FROM deleted_posts WHERE fingerprint=?').get(fp, fp) ||
     db.prepare("SELECT 1 FROM posts WHERE fingerprint=? AND status='published'").get(fingerprint(title, category)) || nearMatch(title, category, category === 'latest-jobs' ? report.closedTitles : [])) return;
   const link = t(/official link/);
   savePost({

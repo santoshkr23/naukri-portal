@@ -85,8 +85,12 @@ router.get('/:slug/', (req, res, next) => {
   }
 
   const post = getBySlug(slug);
-  const preview = req.query.preview === '1' && require('../auth').isAuthed(req);
-  if (!post || (post.status !== 'published' && !preview)) return next();
+  if (!post || post.status !== 'published') return next();
+  renderPost(res, post);
+});
+
+function renderPost(res, post) {
+  const s = res.locals.settings, b = res.locals.baseUrl;
   const near = (op, dir) => db.prepare(`SELECT slug,title FROM posts WHERE status='published' AND category=? AND id<>?
     AND published_at ${op} ? ORDER BY published_at ${dir}, id ${dir} LIMIT 1`).get(post.category, post.id, post.published_at || '');
   const sections = Object.keys(CATEGORIES).map(k => ({ key: k, rows: db.prepare(`SELECT slug,title FROM posts WHERE status='published'
@@ -97,6 +101,7 @@ router.get('/:slug/', (req, res, next) => {
       type: 'article', published: post.published_at, modified: post.updated_at, robots: post.status === 'published' ? null : 'noindex' },
     schema: postSchema(post, s, b)
   });
-});
+}
 
+router.renderPost = renderPost;
 module.exports = router;

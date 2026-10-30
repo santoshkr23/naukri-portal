@@ -61,6 +61,9 @@ CREATE TABLE IF NOT EXISTS logs (
 );
 
 CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT);
+
+-- Posts deleted in the admin; the Excel import and starter seed skip these so they don't come back
+CREATE TABLE IF NOT EXISTS deleted_posts (fingerprint TEXT PRIMARY KEY, title TEXT, deleted_at TEXT DEFAULT (datetime('now')));
 `);
 
 const DEFAULT_SETTINGS = {
