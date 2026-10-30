@@ -193,3 +193,4 @@ tbody tr:last-child td{border-bottom:0}
 .post-banner{margin:10px 0 6px}
 .post-banner img{width:100%;height:auto;display:block;border-radius:var(--radius);box-shadow:0 2px 10px rgba(0,0,0,.08)}
 .hn-list img{height:68px}
+.hn-list img{height:68px;object-fit:cover}

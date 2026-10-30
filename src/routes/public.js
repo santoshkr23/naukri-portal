@@ -17,6 +17,14 @@ router.get('/banner/:slug.jpg', async (req, res, next) => {
   catch (e) { console.error('banner:', e.message); next(); }
 });
 
+// News stories: the green Hindi headline card (wide)
+router.get('/card/:slug.jpg', async (req, res, next) => {
+  const post = getBySlug(req.params.slug);
+  if (!post || post.category !== 'news' || (post.status !== 'published' && !require('../auth').isAuthed(req))) return next();
+  try { res.set('Cache-Control', 'public, max-age=86400').type('jpg').sendFile((await require('../social/card').cardFile(post, 'wide')).file); }
+  catch (e) { console.error('card:', e.message); next(); }
+});
+
 router.get('/social/:file', (req, res, next) => {
   if (!/^[a-z0-9-]+-(square|tall)-[0-9a-f]{8}\.jpg$/.test(req.params.file)) return next();
   const f = require('path').join(require('../social/card').DIR, req.params.file);
@@ -59,7 +67,7 @@ router.get('/', (req, res) => {
   for (const c of Object.keys(CATEGORIES)) boxes[c] = listPosts({ category: c, limit: 25, years: homeYears }).rows;
   const hy = yearClause(homeYears);
   const news = db.prepare(`SELECT slug,title,data,published_at FROM posts WHERE status='published' AND category='news' ORDER BY published_at DESC, id DESC LIMIT 7`).all()
-    .map(n => { let d = {}; try { d = JSON.parse(n.data); } catch {} return { ...n, keyword: d.keyword || '', img: d.relatedSlug ? `/banner/${d.relatedSlug}.jpg` : `/og/${n.slug}.png` }; });
+    .map(n => { let d = {}; try { d = JSON.parse(n.data); } catch {} return { ...n, keyword: d.keyword || '', img: `/card/${n.slug}.jpg` }; });
   const highlights = db.prepare(`SELECT slug,title,category FROM posts WHERE status='published' AND category<>'news' AND ${hy.sql} ORDER BY featured DESC, published_at DESC LIMIT 12`).all(...hy.args);
   const s = res.locals.settings;
   res.render('home', {
@@ -127,7 +135,7 @@ function renderNews(res, post) {
   const related = post.data.relatedSlug ? db.prepare("SELECT slug,title,category FROM posts WHERE slug=? AND status='published'").get(post.data.relatedSlug) : null;
   res.render('news', {
     post, more, related, fmtDate, timeAgo, fmtTime,
-    meta: { title: post.title, description: post.meta_description, canonical: `${b}/${post.slug}/`, image: related ? `${b}/banner/${related.slug}.jpg` : `${b}/og/${post.slug}.png`, lang: post.data.lang || 'hi',
+    meta: { title: post.title, description: post.meta_description, canonical: `${b}/${post.slug}/`, image: `${b}/card/${post.slug}.jpg`, lang: post.data.lang || 'hi',
       type: 'article', published: post.published_at, modified: post.updated_at, robots: post.status === 'published' ? null : 'noindex' },
     schema: postSchema(post, s, b)
   });

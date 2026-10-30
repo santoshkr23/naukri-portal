@@ -122,13 +122,18 @@ function facts(post) {
 }
 
 // ---------- drawing ----------
+// Background styles; each post takes the next one (by its id)
+const BG = [['#0284c7', '#7dd3fc', '#fef3c7'], ['#ea580c', '#fdba74', '#fef9c3'], ['#0f766e', '#5eead4', '#f0fdfa'], ['#6d28d9', '#c4b5fd', '#fdf4ff'], ['#be123c', '#fda4af', '#fff7ed']];
+const bgIndex = post => (Number(post.id) || 0) % BG.length;
+
 async function render(post) {
+  const bgi = bgIndex(post);
   const f = facts(post);
   const s = getSettings();
   const L = []; const put = (o, left, top) => L.push({ input: o.input, left: Math.round(left), top: Math.round(top) });
 
   const bg = svg(W, H, `
-    <defs><linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0284c7"/><stop offset="0.55" stop-color="#7dd3fc"/><stop offset="1" stop-color="#fef3c7"/></linearGradient>
+    <defs><linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${BG[bgi][0]}"/><stop offset="0.55" stop-color="${BG[bgi][1]}"/><stop offset="1" stop-color="${BG[bgi][2]}"/></linearGradient>
     <radialGradient id="sun" cx="0.62" cy="0.18" r="0.6"><stop offset="0" stop-color="#fff7d6" stop-opacity="0.95"/><stop offset="1" stop-color="#fff7d6" stop-opacity="0"/></radialGradient></defs>
     <rect width="${W}" height="${H}" fill="url(#sky)"/><rect width="${W}" height="${H}" fill="url(#sun)"/>
     ${Array.from({ length: 14 }, (_, i) => `<path d="M790 120 L${-200 + i * 140} ${H} L${-130 + i * 140} ${H} Z" fill="#ffffff" opacity="0.07"/>`).join('')}
@@ -263,7 +268,7 @@ async function calendar(f, put) {
 async function bannerFile(post) {
   fs.mkdirSync(DIR, { recursive: true });
   const f = facts(post);
-  const v = crypto.createHash('md5').update(JSON.stringify([f, getSettings().site_name, 6])).digest('hex').slice(0, 10);
+  const v = crypto.createHash('md5').update(JSON.stringify([f, getSettings().site_name, bgIndex(post), 7])).digest('hex').slice(0, 10);
   const file = path.join(DIR, `${post.slug}-${v}.jpg`);
   if (!fs.existsSync(file)) fs.writeFileSync(file, await render(post));
   return file;

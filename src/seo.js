@@ -35,7 +35,7 @@ function postSchema(post, settings, baseUrl) {
     breadcrumbs([{ name: 'Home', url: baseUrl + '/' }, { name: cat.name, url: `${baseUrl}/${post.category}/` }, { name: post.title, url }]),
     {
       '@type': post.category === 'news' ? 'NewsArticle' : 'Article', ...(post.data?.lang ? { inLanguage: post.data.lang } : {}), headline: post.title.slice(0, 110), description: post.meta_description,
-      image: post.category === 'news' ? (post.data?.relatedSlug ? `${baseUrl}/banner/${post.data.relatedSlug}.jpg` : `${baseUrl}/og/${post.slug}.png`) : `${baseUrl}/banner/${post.slug}.jpg`, datePublished: toIso(post.published_at), dateModified: toIso(post.updated_at || post.published_at),
+      image: post.category === 'news' ? `${baseUrl}/card/${post.slug}.jpg` : `${baseUrl}/banner/${post.slug}.jpg`, datePublished: toIso(post.published_at), dateModified: toIso(post.updated_at || post.published_at),
       mainEntityOfPage: url, author: orgLd(settings, baseUrl), publisher: orgLd(settings, baseUrl)
     }
   ];
