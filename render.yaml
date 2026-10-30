@@ -1,0 +1,27 @@
+# One-click deploy on Render: https://dashboard.render.com/blueprints -> New Blueprint -> pick this repo
+services:
+  - type: web
+    name: naukri-portal
+    runtime: node
+    plan: free            # change to "starter" + add a disk (below) for production
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /robots.txt
+    envVars:
+      - key: NODE_VERSION
+        value: 22
+      - key: ADMIN_USER
+        value: admin
+      - key: ADMIN_PASSWORD
+        sync: false        # Render will ask you to type it
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: SEED_DEMO
+        value: "1"         # shows sample posts on an empty site; set to 0 once you have real posts
+      - key: DATA_DIR
+        value: ./data
+    # For production (paid plan), keep the database across deploys:
+    # disk:
+    #   name: data
+    #   mountPath: /opt/render/project/src/data
+    #   sizeGB: 1

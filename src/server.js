@@ -41,6 +41,7 @@ app.use((err, req, res, next) => { console.error(err); res.status(500).send('Som
 
 const port = process.env.PORT || 3000;
 if (require.main === module) {
+  if (process.env.SEED_DEMO === '1') { const n = require('./seed').seed(); if (n) console.log(`Seeded ${n} sample posts`); }
   app.listen(port, () => console.log(`Site running on http://localhost:${port}  (admin: /admin)`));
   require('./scraper').startScheduler();
 }
