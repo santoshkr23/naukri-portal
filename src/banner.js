@@ -5,7 +5,7 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const sharp = require('sharp');
-const { DATA_DIR, getSettings, siteUrl } = require('./db');
+const { DATA_DIR, getSettings } = require('./db');
 
 const FONTS = path.join(__dirname, '..', 'assets', 'fonts');
 const F = {
@@ -120,7 +120,6 @@ function facts(post) {
 async function render(post) {
   const f = facts(post);
   const s = getSettings();
-  const domain = (siteUrl().match(/^https?:\/\/(?:www\.)?([^/]+)/) || [])[1] || '';
   const L = []; const put = (o, left, top) => L.push({ input: o.input, left: Math.round(left), top: Math.round(top) });
 
   const bg = svg(W, H, `
@@ -214,7 +213,7 @@ async function render(post) {
   put(ap1, 870, 560 + (54 - ap1.height) / 2); put(ap2, 870 + ap1.width + 12, 560 + (54 - ap2.height) / 2);
 
   // footer
-  const foot = [s.site_name || 'NaukriSetu', 'सरकारी नौकरी • Latest Govt Jobs', 'Admit Card • Result • Answer Key', domain].filter(Boolean);
+  const foot = [s.site_name || 'NaukriSetu', 'सरकारी नौकरी • Latest Govt Jobs', 'Admit Card • Result • Answer Key'];
   const fw = W / foot.length;
   for (let i = 0; i < foot.length; i++) { const t = await fitLine(foot[i], { font: i === 0 ? 'anton' : 'hind', color: i === 0 ? '#fde047' : '#ffffff' }, fw - 30, 44, i === 0 ? 30 : 22, 14); put(t, i * fw + (fw - t.width) / 2, H - 62 + (62 - t.height) / 2); }
 
@@ -224,7 +223,7 @@ async function render(post) {
 async function bannerFile(post) {
   fs.mkdirSync(DIR, { recursive: true });
   const f = facts(post);
-  const v = crypto.createHash('md5').update(JSON.stringify([f, getSettings().site_name, siteUrl(), 3])).digest('hex').slice(0, 10);
+  const v = crypto.createHash('md5').update(JSON.stringify([f, getSettings().site_name, 4])).digest('hex').slice(0, 10);
   const file = path.join(DIR, `${post.slug}-${v}.jpg`);
   if (!fs.existsSync(file)) fs.writeFileSync(file, await render(post));
   return file;

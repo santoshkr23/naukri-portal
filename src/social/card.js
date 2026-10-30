@@ -49,7 +49,6 @@ async function render(news, kind) {
   const s = getSettings();
   const d = news.data || {};
   const site = s.site_name || 'NaukriSetu';
-  const domain = hostOf(siteUrl()) || site;
   const pad = 60, top = 150, footer = 150;
   const points = ((d.extra || [])[0]?.items || []).slice(0, kind === 'tall' ? 3 : 2);
 
@@ -85,7 +84,7 @@ async function render(news, kind) {
   y += head.height + 34;
   if (pointsBlock) layers.push({ ...pointsBlock, top: y, left: pad });
 
-  const cta = await text(`पूरी खबर पढ़ें:  ${domain}`, { size: 42, color: '#0b3d3a' });
+  const cta = await text(`पूरी खबर पढ़ें:  ${site}`, { size: 42, color: '#0b3d3a' });
   layers.push({ ...cta, top: H - footer + Math.round((footer - cta.height) / 2) + 4, left: pad });
 
   return sharp(bg).composite(layers.map(({ input, top, left }) => ({ input, top: Math.max(0, Math.round(top)), left: Math.round(left) })))
