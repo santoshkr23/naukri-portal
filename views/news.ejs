@@ -14,7 +14,7 @@
       <% if (post.updated_at && post.updated_at > post.published_at) { %><span>अपडेट: <%= fmtTime(post.updated_at) %></span><% } %>
     </div>
 
-    <figure class="news-figure"><img src="/og/<%= post.slug %>.png" alt="<%= d.keyword || post.title %>" width="1200" height="630" loading="eager"></figure>
+    <figure class="news-figure"><img src="<%= related ? '/banner/' + related.slug + '.jpg' : '/og/' + post.slug + '.png' %>" alt="<%= d.keyword || post.title %>" width="1280" height="720" loading="eager"></figure>
 
     <% (d.extra || []).forEach(x => { %>
     <aside class="news-points"><h2><%= x.heading %></h2><ul><% x.items.forEach(i => { %><li><%= i %></li><% }) %></ul></aside>

@@ -294,8 +294,8 @@ router.post('/social/run', async (req, res) => {
 router.get('/social/preview/:id/:kind.jpg', async (req, res, next) => {
   const p = getById(+req.params.id);
   if (!p || p.category !== 'news' || !['square', 'tall'].includes(req.params.kind)) return next();
-  const { file } = await require('../social/card').cardFile(p, req.params.kind);
-  res.type('jpg').sendFile(file);
+  const img = await social.postImage(p);
+  res.type('jpg').sendFile(img[req.params.kind].file);
 });
 
 // ---------- Keep settings across restarts ----------

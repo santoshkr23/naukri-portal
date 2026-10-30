@@ -55,7 +55,7 @@ const mock = http.createServer((req, res) => {
   assert.ok(tg.type.startsWith('multipart/form-data') && tg.body.includes(Buffer.from([0xff, 0xd8, 0xff])), 'telegram got a JPEG');
   assert.ok(tg.body.toString().includes('https://example-site.test/rrb-technician-answer-key-2026-news/'), 'telegram caption has the link');
   const ig = seen.find(s => s.path.endsWith('/media'));
-  const igBody = JSON.parse(ig.body); assert.ok(/^https:\/\/example-site\.test\/social\/.+-square-[0-9a-f]{8}\.jpg$/.test(igBody.image_url), 'instagram image url is public: ' + igBody.image_url);
+  const igBody = JSON.parse(ig.body); assert.ok(/^https:\/\/example-site\.test\/banner\/rrb-technician-answer-key-2026[a-z0-9-]*\.jpg$/.test(igBody.image_url), 'instagram gets the public banner url: ' + igBody.image_url);
   const pin = JSON.parse(seen.find(s => s.host === 'api.pinterest.com').body);
   assert.strictEqual(pin.board_id, '123'); assert.strictEqual(pin.media_source.source_type, 'image_base64'); assert.ok(pin.title.length <= 100);
   const tw = seen.find(s => s.path === '/2/tweets');
@@ -83,7 +83,7 @@ const mock = http.createServer((req, res) => {
   // already posted -> sharing again does nothing; the image file is served publicly
   const again = await social.sharePost(news.id); assert.strictEqual(again.results.length, 0, 'no double posting');
   const app = require('../src/server'); const srv = app.listen(4812);
-  const img = await fetch('http://localhost:4812/social/' + igBody.image_url.split('/social/')[1]);
+  const img = await fetch('http://localhost:4812' + new URL(igBody.image_url).pathname);
   assert.strictEqual(img.status, 200); assert.strictEqual(img.headers.get('content-type'), 'image/jpeg');
   fs.writeFileSync(path.join(__dirname, 'out-social.jpg'), Buffer.from(await img.arrayBuffer()));
   // Excel: first import into an empty database posts nothing; a new row in a later import is queued

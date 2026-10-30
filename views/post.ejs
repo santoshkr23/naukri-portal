@@ -5,6 +5,7 @@
   <nav class="crumbs"><a href="/">Home</a> › <a href="/<%= post.category %>/"><%= cat.name %></a> › <span><%= post.title.split(/[:–]/)[0] %></span></nav>
   <% if (post.status !== 'published') { %><div class="draft-note">Preview — this post is a draft and is not public.</div><% } %>
   <h1><%= post.title %></h1>
+  <figure class="post-banner"><img src="/banner/<%= post.slug %>.jpg" alt="<%= post.title.split(/[:–]/)[0] %>" width="1280" height="720" fetchpriority="high"></figure>
   <div class="meta">
     <span class="badge c-<%= cat.color %>"><%= cat.name %></span>
     Posted <time datetime="<%= (post.published_at || '').replace(' ', 'T') %>"><%= fmtDate(post.published_at) %></time>

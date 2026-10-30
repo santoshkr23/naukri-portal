@@ -20,10 +20,9 @@
   <section class="card">
     <h2>Post image</h2>
     <% if (latest) { %>
-      <p class="muted small">Made automatically for every story. Square for Instagram, Facebook, Telegram and X; tall for Pinterest. Latest story:</p>
+      <p class="muted small">Made automatically for every story. The post's colourful banner is used on every platform. Latest story:</p>
       <div class="social-prev">
         <a href="/admin/social/preview/<%= latest.id %>/square.jpg" target="_blank"><img src="/admin/social/preview/<%= latest.id %>/square.jpg" alt="Square image"></a>
-        <a href="/admin/social/preview/<%= latest.id %>/tall.jpg" target="_blank"><img src="/admin/social/preview/<%= latest.id %>/tall.jpg" alt="Tall image"></a>
       </div>
       <form method="post" action="/admin/social/share/<%= latest.id %>" onsubmit="return confirm('Post this story now to every account that is turned on?')"><button class="btn ghost">Post this story now</button></form>
     <% } else { %><p class="muted">No news stories yet.</p><% } %>

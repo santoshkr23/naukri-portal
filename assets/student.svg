@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 440" width="320" height="440">
+  <!-- Original illustration for NaukriSetu job banners: a smiling student with books and an ID card -->
+  <defs>
+    <linearGradient id="kurta" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1fa59a"/><stop offset="1" stop-color="#0f766e"/></linearGradient>
+    <linearGradient id="skin" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e6a97f"/><stop offset="1" stop-color="#d4916a"/></linearGradient>
+    <linearGradient id="hair" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2b1a14"/><stop offset="1" stop-color="#140c09"/></linearGradient>
+  </defs>
+  <!-- hair behind -->
+  <path d="M92 118 C82 60 128 28 168 30 C214 32 246 66 238 124 C236 180 250 252 226 316 C192 334 128 334 98 316 C76 252 98 178 92 118 Z" fill="url(#hair)"/>
+  <!-- body -->
+  <path d="M60 440 C62 360 86 318 128 302 L160 296 L192 302 C236 318 260 360 262 440 Z" fill="url(#kurta)"/>
+  <!-- dupatta -->
+  <path d="M108 306 C140 340 196 372 236 440 L198 440 C168 392 128 360 96 326 Z" fill="#ec4899"/>
+  <path d="M108 306 C140 340 196 372 236 440" fill="none" stroke="#fbbf24" stroke-width="5" stroke-dasharray="2 9" stroke-linecap="round"/>
+  <!-- neck -->
+  <path d="M142 250 L178 250 L182 300 C172 312 148 312 138 300 Z" fill="#cf8a62"/>
+  <!-- neckline -->
+  <path d="M132 300 C146 326 174 326 188 300" fill="none" stroke="#0b5f58" stroke-width="5" stroke-linecap="round"/>
+  <!-- lanyard + ID card -->
+  <path d="M140 302 L156 372 M180 302 L164 372" stroke="#2563eb" stroke-width="6" stroke-linecap="round"/>
+  <rect x="136" y="368" width="48" height="64" rx="6" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+  <rect x="136" y="368" width="48" height="14" rx="6" fill="#2563eb"/>
+  <rect x="146" y="388" width="16" height="18" rx="3" fill="#93c5fd"/>
+  <rect x="146" y="412" width="28" height="4" rx="2" fill="#94a3b8"/><rect x="146" y="420" width="20" height="4" rx="2" fill="#cbd5e1"/>
+  <!-- face -->
+  <ellipse cx="160" cy="176" rx="62" ry="76" fill="url(#skin)"/>
+  <!-- ears + earrings -->
+  <ellipse cx="98" cy="182" rx="10" ry="16" fill="#d4916a"/><ellipse cx="222" cy="182" rx="10" ry="16" fill="#d4916a"/>
+  <circle cx="98" cy="204" r="6" fill="#f59e0b"/><circle cx="222" cy="204" r="6" fill="#f59e0b"/>
+  <!-- hair front: side parting with a soft fringe -->
+  <path d="M96 150 C92 92 130 62 170 64 C206 66 230 92 226 140 C212 110 186 96 156 100 C134 104 112 122 96 150 Z" fill="url(#hair)"/>
+  <!-- eyebrows -->
+  <path d="M122 150 C130 144 142 144 150 148" fill="none" stroke="#2b1a14" stroke-width="5" stroke-linecap="round"/>
+  <path d="M170 148 C178 144 190 144 198 150" fill="none" stroke="#2b1a14" stroke-width="5" stroke-linecap="round"/>
+  <!-- eyes -->
+  <ellipse cx="136" cy="170" rx="10" ry="11" fill="#ffffff"/><ellipse cx="184" cy="170" rx="10" ry="11" fill="#ffffff"/>
+  <circle cx="137" cy="171" r="7" fill="#2b1a14"/><circle cx="185" cy="171" r="7" fill="#2b1a14"/>
+  <circle cx="139" cy="168" r="2.4" fill="#ffffff"/><circle cx="187" cy="168" r="2.4" fill="#ffffff"/>
+  <path d="M125 162 C132 156 142 157 147 162" fill="none" stroke="#2b1a14" stroke-width="3" stroke-linecap="round"/>
+  <path d="M173 162 C178 157 188 156 195 162" fill="none" stroke="#2b1a14" stroke-width="3" stroke-linecap="round"/>
+  <!-- bindi, nose, cheeks, smile -->
+  <circle cx="160" cy="140" r="4" fill="#dc2626"/>
+  <path d="M160 178 C156 194 154 200 162 202" fill="none" stroke="#b8744f" stroke-width="3" stroke-linecap="round"/>
+  <ellipse cx="122" cy="200" rx="12" ry="7" fill="#f472b6" opacity="0.35"/><ellipse cx="198" cy="200" rx="12" ry="7" fill="#f472b6" opacity="0.35"/>
+  <path d="M136 214 C148 232 172 232 184 214 C172 220 148 220 136 214 Z" fill="#ffffff" stroke="#9f1239" stroke-width="3" stroke-linejoin="round"/>
+  <!-- arm holding books -->
+  <path d="M232 318 C262 340 270 380 262 420 L226 420 C230 392 224 364 210 346 Z" fill="#0f766e"/>
+  <g transform="rotate(-8 250 392)">
+    <rect x="190" y="372" width="110" height="20" rx="4" fill="#dc2626"/><rect x="190" y="372" width="110" height="5" rx="2" fill="#fca5a5"/>
+    <rect x="196" y="392" width="104" height="20" rx="4" fill="#facc15"/><rect x="196" y="392" width="104" height="5" rx="2" fill="#fef08a"/>
+    <rect x="186" y="412" width="114" height="22" rx="4" fill="#2563eb"/><rect x="186" y="412" width="114" height="5" rx="2" fill="#93c5fd"/>
+  </g>
+  <ellipse cx="206" cy="398" rx="16" ry="12" fill="#d4916a"/>
+</svg>

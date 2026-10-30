@@ -26,10 +26,10 @@
   <div class="hn-head"><h2>ताज़ा खबरें <span>Latest News</span></h2><a href="/news/">सभी खबरें →</a></div>
   <div class="hn-grid">
     <a class="hn-lead" href="/<%= lead.slug %>/">
-      <img src="/og/<%= lead.slug %>.png" alt="<%= lead.keyword %>" width="1200" height="630" loading="lazy">
+      <img src="<%= lead.img %>" alt="<%= lead.keyword %>" width="1280" height="720" loading="lazy">
       <strong><%= lead.title %></strong><time><%= timeAgo(lead.published_at) %></time>
     </a>
-    <ul class="hn-list"><% rest.forEach(n => { %><li><a href="/<%= n.slug %>/"><img src="/og/<%= n.slug %>.png" alt="" width="120" height="63" loading="lazy"><span><%= n.title %><time><%= timeAgo(n.published_at) %></time></span></a></li><% }) %></ul>
+    <ul class="hn-list"><% rest.forEach(n => { %><li><a href="/<%= n.slug %>/"><img src="<%= n.img %>" alt="" width="120" height="68" loading="lazy"><span><%= n.title %><time><%= timeAgo(n.published_at) %></time></span></a></li><% }) %></ul>
   </div>
 </section>
 <% } %>

@@ -36,7 +36,7 @@ const hiLabel = k => {
 
 const get = (rows, re) => ((rows || []).find(([k]) => re.test(k)) || [])[1];
 const host = u => { try { return new URL(u).hostname.replace(/^www\./, ''); } catch { return ''; } };
-const shortOrg = org => (String(org || '').match(/\(([^)]+)\)\s*$/) || [])[1] || String(org || '').trim();
+const shortOrg = org => (String(org || '').match(/\(([A-Z][A-Za-z&.\- ]{1,14})\)/) || [])[1] || String(org || '').split(',')[0].trim();
 const keyword = title => String(title).split(/:|–(?=[^–]*$)/)[0].replace(/\s*\((\d[\d,]*\s*Posts?|topic-wise)\)/ig, '').trim();
 const dot = s => (s ? String(s).replace(/[.।\s]+$/, '') + '।' : '');
 
@@ -48,7 +48,10 @@ function story(p) {
   const so = shortOrg(org);
   const official = (d.links || []).find(([l]) => /official|website/i.test(l)) || (d.links || [])[0];
   const site = official ? host(official[1]) : '';
-  const lastH = hiDate(get(d.dates, /last date(?!.*fee)/i) || p.last_date);
+  // a plain date only: "within 60 days of … (approx. 28 December 2026)" becomes "28 दिसंबर 2026"
+  const lastRaw = get(d.dates, /last date(?!.*fee)/i);
+  const lastIso = p.last_date || require('./util').parseDateLoose(lastRaw);
+  const lastH = lastIso ? hiDate(lastIso) : (lastRaw && lastRaw.length <= 24 ? hiDate(lastRaw) : '');
   const startH = hiDate(get(d.dates, /start/i));
   const examRaw = get(d.dates, /^(?!.*(city|admit|answer|result)).*(exam|cbt|test)/i);
   const examH = hiDate(examRaw);

@@ -148,7 +148,7 @@ const POSTERS = {
     const caption = [p.title, p.deck, p.points.map(x => `• ${x}`).join('\n'), `👉 पूरी खबर: ${p.link}`, '(लिंक प्रोफ़ाइल के बायो में भी)', p.tags].filter(Boolean).join('\n\n').slice(0, 2200);
     const g = `https://graph.facebook.com/${c.graph}/${c.instagram.ig_user_id}`;
     const made = await call(`${g}/media`, { method: 'POST', headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ image_url: `${c.base}/social/${img.square.name}`, caption, access_token: c.instagram.ig_token }) });
+      body: JSON.stringify({ image_url: `${c.base}${img.square.path}`, caption, access_token: c.instagram.ig_token }) });
     let r;
     for (let i = 0; i < 6; i++) { // the container can need a moment before it can be published
       try { r = await call(`${g}/media_publish`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ creation_id: made.id, access_token: c.instagram.ig_token }) }); break; }
@@ -236,7 +236,7 @@ async function sharePost(postId, only) {
     log('error', 'Social: ' + msg);
     return { results: targets.map(p => ({ platform: p, ok: false, error: msg })) };
   }
-  const img = { square: await cardFile(news, 'square'), tall: await cardFile(news, 'tall') };
+  const img = await postImage(news);
   const results = [];
   for (const p of targets) {
     try {
@@ -250,6 +250,18 @@ async function sharePost(postId, only) {
     }
   }
   return { results };
+}
+
+// The colourful banner of the post this story is about; the plain headline card only when there is none
+async function postImage(news) {
+  const rel = news.data?.relatedSlug && parsePost(db.prepare("SELECT * FROM posts WHERE slug=? AND category<>'news'").get(news.data.relatedSlug));
+  if (rel) {
+    const file = await require('../banner').bannerFile(rel);
+    const one = { file, name: `${rel.slug}.jpg`, path: `/banner/${rel.slug}.jpg` };
+    return { square: one, tall: one };
+  }
+  const sq = await cardFile(news, 'square'), tall = await cardFile(news, 'tall');
+  return { square: { ...sq, path: `/social/${sq.name}` }, tall: { ...tall, path: `/social/${tall.name}` } };
 }
 
 let busy = false;
@@ -277,4 +289,4 @@ function startWorker() {
   setTimeout(() => processQueue().catch(e => log('error', 'Social queue: ' + e.message)), 60000); // after waking up
 }
 
-module.exports = { PLATFORMS, SECRET_KEYS, cfg, quietly, quietlySync, onNewsCreated, enqueue, newsIdsFor, sharePost, processQueue, checkPlatform, startWorker };
+module.exports = { postImage, PLATFORMS, SECRET_KEYS, cfg, quietly, quietlySync, onNewsCreated, enqueue, newsIdsFor, sharePost, processQueue, checkPlatform, startWorker };
