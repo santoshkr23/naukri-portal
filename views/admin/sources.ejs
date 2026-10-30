@@ -1,0 +1,52 @@
+<%- include('_top') %>
+<h1>Auto-import sources</h1>
+<p class="muted">Add up to as many sites as you like. Each source is checked on the schedule; new pages are found, facts are pulled out, and a post is written in your template. The first check of a new source imports only the newest few pages (see Settings), so the site isn't flooded with old posts.</p>
+<p class="muted small">Tip: official sources work best and are the most reliable — e.g. the "What's new" / recruitment page of a commission, or a site's RSS feed (often <code>/feed/</code> on WordPress sites). Pages blocked by a site's robots.txt are skipped automatically.</p>
+
+<section class="card">
+  <h2>Add a source</h2>
+  <form method="post" action="/admin/sources/save" class="pform">
+    <div class="grid2">
+      <label>Name<input name="name" placeholder="e.g. Site A – latest jobs"></label>
+      <label>Listing page or RSS feed URL<input name="list_url" type="url" required placeholder="https://example.com/latest-jobs/"></label>
+      <label>Link area CSS selector (optional)<input name="link_selector" placeholder="e.g. .entry-content ul"></label>
+      <label>Post content CSS selector (optional)<input name="content_selector" placeholder="e.g. article .entry-content"></label>
+    </div>
+    <input type="hidden" name="enabled" value="1">
+    <button class="btn">Add source</button>
+  </form>
+</section>
+
+<section class="card flush">
+<table>
+  <thead><tr><th>Source</th><th>Last checked</th><th>Imported</th><th>Status</th><th></th></tr></thead>
+  <tbody>
+  <% sources.forEach(s => { %>
+    <tr>
+      <td>
+        <details><summary><strong><%= s.name %></strong><div class="muted small"><%= s.list_url %></div></summary>
+          <form method="post" action="/admin/sources/save" class="pform inline-edit">
+            <input type="hidden" name="id" value="<%= s.id %>">
+            <label>Name<input name="name" value="<%= s.name %>"></label>
+            <label>URL<input name="list_url" type="url" value="<%= s.list_url %>" required></label>
+            <label>Link selector<input name="link_selector" value="<%= s.link_selector || '' %>"></label>
+            <label>Content selector<input name="content_selector" value="<%= s.content_selector || '' %>"></label>
+            <label class="check"><input type="checkbox" name="enabled" value="1" <%= s.enabled ? 'checked' : '' %>> Enabled</label>
+            <button class="btn ghost">Save changes</button>
+          </form>
+        </details>
+      </td>
+      <td class="small nowrap"><%= s.last_checked || 'never' %></td>
+      <td class="num"><%= s.imported_count %></td>
+      <td><% if (s.last_error) { %><span class="tag err" title="<%= s.last_error %>">error</span><div class="small muted"><%= s.last_error.slice(0, 80) %></div><% } else if (!s.enabled) { %><span class="tag draft">off</span><% } else { %><span class="tag published">ok</span><% } %></td>
+      <td class="nowrap actions">
+        <form method="post" action="/admin/sources/<%= s.id %>/run"><button class="linkbtn" <%= running ? 'disabled' : '' %>>Check now</button></form>
+        <form method="post" action="/admin/sources/<%= s.id %>/delete" onsubmit="return confirm('Remove this source?')"><button class="linkbtn danger">Remove</button></form>
+      </td>
+    </tr>
+  <% }) %>
+  </tbody>
+</table>
+<% if (!sources.length) { %><p class="muted pad">No sources yet.</p><% } %>
+</section>
+<%- include('_bottom') %>

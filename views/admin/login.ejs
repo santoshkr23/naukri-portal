@@ -1,0 +1,12 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex"><title>Admin login</title><link rel="stylesheet" href="/static/css/admin.css"></head>
+<body class="login-body">
+<form class="card login" method="post" action="/admin/login">
+  <h1><%= settings.site_name %> admin</h1>
+  <% if (error) { %><div class="flash err"><%= error %></div><% } %>
+  <label>Username<input name="user" autocomplete="username" required></label>
+  <label>Password<input name="pass" type="password" autocomplete="current-password" required></label>
+  <button class="btn">Log in</button>
+</form>
+</body></html>

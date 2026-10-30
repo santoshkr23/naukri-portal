@@ -1,0 +1,28 @@
+<%- include('partials/head') %>
+<%- include('partials/header') %>
+<div class="wrap narrow">
+  <nav class="crumbs"><a href="/">Home</a> › <span><%= heading %></span></nav>
+  <h1 class="page-h"><%= heading %></h1>
+  <% if (!rows.length) { %><p class="empty">Nothing found<%= q ? ' for “' + q + '”' : '' %>.</p><% } %>
+  <ul class="post-list">
+    <% rows.forEach(p => { %>
+      <li>
+        <a href="/<%= p.slug %>/"><%= p.title %></a>
+        <div class="meta">
+          <span class="badge c-<%= CATEGORIES[p.category]?.color %>"><%= CATEGORIES[p.category]?.short %></span>
+          Posted <%= fmtDate(p.published_at) %>
+          <% if (p.total_posts) { %> · <%= p.total_posts %> posts<% } %>
+          <% if (p.last_date) { %> · Last date <%= fmtDate(p.last_date) %><% } %>
+        </div>
+      </li>
+    <% }) %>
+  </ul>
+  <% if (pages > 1) { %>
+    <nav class="pager">
+      <% if (page > 1) { %><a href="/<%= catKey %>/<%= page > 2 ? '?page=' + (page - 1) : '' %>">← Newer</a><% } %>
+      <span>Page <%= page %> of <%= pages %></span>
+      <% if (page < pages) { %><a href="/<%= catKey %>/?page=<%= page + 1 %>">Older →</a><% } %>
+    </nav>
+  <% } %>
+</div>
+<%- include('partials/footer') %>

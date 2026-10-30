@@ -1,0 +1,21 @@
+<header class="masthead">
+  <div class="wrap masthead-in">
+    <a class="brand" href="/">
+      <span class="brand-mark" aria-hidden="true">N</span>
+      <span><strong><%= settings.site_name %></strong><small><%= settings.site_tagline %></small></span>
+    </a>
+    <form class="search" action="/search/" method="get" role="search">
+      <input type="search" name="q" placeholder="Search jobs, results, admit cards…" aria-label="Search">
+      <button type="submit">Search</button>
+    </form>
+  </div>
+  <nav class="mainnav" aria-label="Main">
+    <div class="wrap navscroll">
+      <a href="/" class="<%= currentPath === '/' ? 'on' : '' %>">Home</a>
+      <% Object.entries(CATEGORIES).forEach(([k, c]) => { %>
+        <a href="/<%= k %>/" class="<%= currentPath === '/' + k + '/' ? 'on' : '' %>"><%= c.name %></a>
+      <% }) %>
+    </div>
+  </nav>
+</header>
+<main id="content">

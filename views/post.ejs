@@ -1,0 +1,94 @@
+<%- include('partials/head') %>
+<%- include('partials/header') %>
+<% const d = post.data || {}; const cat = CATEGORIES[post.category] || { name: post.category, color: 'teal' }; %>
+<article class="wrap narrow post">
+  <nav class="crumbs"><a href="/">Home</a> › <a href="/<%= post.category %>/"><%= cat.name %></a> › <span><%= post.title.split(/[:–]/)[0] %></span></nav>
+  <% if (post.status !== 'published') { %><div class="draft-note">Preview — this post is a draft and is not public.</div><% } %>
+  <h1><%= post.title %></h1>
+  <div class="meta">
+    <span class="badge c-<%= cat.color %>"><%= cat.name %></span>
+    Posted <time datetime="<%= (post.published_at || '').replace(' ', 'T') %>"><%= fmtDate(post.published_at) %></time>
+    <% if (post.updated_at && post.updated_at !== post.published_at) { %> · Updated <%= fmtDate(post.updated_at) %><% } %>
+  </div>
+
+  <div class="summary">
+    <% if (post.organization) { %><div><span>Organisation</span><strong><%= post.organization %></strong></div><% } %>
+    <% if (post.total_posts) { %><div><span>Total posts</span><strong><%= post.total_posts %></strong></div><% } %>
+    <% if (post.last_date) { %><div><span>Last date</span><strong><%= fmtDate(post.last_date) %></strong></div><% } %>
+    <% if (d.advt) { %><div><span>Advt. no.</span><strong><%= d.advt %></strong></div><% } %>
+  </div>
+
+  <div class="intro"><% String(d.intro || '').split(/\n\s*\n/).forEach(p => { %><p><%= p %></p><% }) %></div>
+
+  <% if (settings.adsense_client) { %><div class="ad-slot"><ins class="adsbygoogle" style="display:block" data-ad-client="<%= settings.adsense_client %>" data-ad-format="auto" data-full-width-responsive="true"></ins><script>(adsbygoogle=window.adsbygoogle||[]).push({});</script></div><% } %>
+
+  <% const pairBox = (title, rows) => rows && rows.length ? `<section class="box"><h2>${title}</h2><dl>${rows.map(([k, v]) => `<div><dt>${esc(k)}</dt>${v ? `<dd>${esc(v)}</dd>` : ''}</div>`).join('')}</dl></section>` : '';
+     const esc = s => String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); %>
+  <div class="box-grid">
+    <%- pairBox('Important Dates', d.dates) %>
+    <%- pairBox('Application Fee', d.fees) %>
+    <%- pairBox('Age Limit', d.age) %>
+    <%- pairBox('Salary / Pay', d.salary) %>
+  </div>
+
+  <% if (d.vacancy && d.vacancy.length) { %>
+  <section class="box wide">
+    <h2>Vacancy Details<% if (post.total_posts) { %> — <%= post.total_posts %> Posts<% } %></h2>
+    <div class="tscroll"><table>
+      <thead><tr><% (d.vacancyHeader || ['Post Name','Total Posts']).forEach(h => { %><th><%= h %></th><% }) %></tr></thead>
+      <tbody><% d.vacancy.forEach(r => { %><tr><% r.forEach(c => { %><td><%= c %></td><% }) %></tr><% }) %></tbody>
+    </table></div>
+  </section>
+  <% } %>
+
+  <% if (d.eligibility && d.eligibility.length) { %>
+  <section class="box wide">
+    <h2>Eligibility</h2>
+    <div class="tscroll"><table>
+      <% const twoCol = d.eligibility.some(r => r[1]); %>
+      <% if (twoCol) { %><thead><tr><th>Post</th><th>Qualification / Experience</th></tr></thead><% } %>
+      <tbody><% d.eligibility.forEach(r => { %><tr><td><%= r[0] %></td><% if (twoCol) { %><td><%= r.slice(1).join(' ') %></td><% } %></tr><% }) %></tbody>
+    </table></div>
+    <p class="note">Check the official notification for the complete eligibility rules and age relaxation.</p>
+  </section>
+  <% } %>
+
+  <% (d.extra || []).forEach(e => { %>
+    <section class="box wide"><h2><%= e.heading %></h2><ul><% e.items.forEach(i => { %><li><%= i %></li><% }) %></ul></section>
+  <% }) %>
+
+  <% if (d.selection && d.selection.length) { %>
+  <section class="box wide"><h2>Selection Process</h2><ol class="steps"><% d.selection.forEach(s => { %><li><%= s %></li><% }) %></ol></section>
+  <% } %>
+
+  <% if (d.howTo && d.howTo.length) { %>
+  <section class="box wide"><h2>How to <%= { 'latest-jobs': 'Apply', 'admit-card': 'Download the Admit Card', 'result': 'Check the Result', 'answer-key': 'Check the Answer Key', 'admission': 'Apply', 'syllabus': 'Get the Syllabus', 'exam-date': 'Check the Exam Date' }[post.category] || 'Proceed' %></h2>
+    <ol class="steps"><% d.howTo.forEach(s => { %><li><%= s %></li><% }) %></ol></section>
+  <% } %>
+
+  <% if (d.links && d.links.length) { %>
+  <section class="box wide links">
+    <h2>Important Links</h2>
+    <table><tbody>
+      <% d.links.forEach(([label, url]) => { %><tr><td><%= label %></td><td><a href="<%= url %>" target="_blank" rel="nofollow noopener">Open official link ↗</a></td></tr><% }) %>
+    </tbody></table>
+  </section>
+  <% } %>
+
+  <% if (d.faqs && d.faqs.length) { %>
+  <section class="faq">
+    <h2>Frequently Asked Questions</h2>
+    <% d.faqs.forEach(([q, a]) => { %><details><summary><%= q %></summary><p><%= a %></p></details><% }) %>
+  </section>
+  <% } %>
+
+  <div class="share">
+    <a href="https://api.whatsapp.com/send?text=<%= encodeURIComponent(post.title + ' ' + meta.canonical) %>" target="_blank" rel="noopener">Share on WhatsApp</a>
+    <a href="https://t.me/share/url?url=<%= encodeURIComponent(meta.canonical) %>&text=<%= encodeURIComponent(post.title) %>" target="_blank" rel="noopener">Share on Telegram</a>
+  </div>
+
+  <% if (related.length) { %>
+  <section class="related"><h2>Related updates</h2><ul><% related.forEach(r => { %><li><a href="/<%= r.slug %>/"><%= r.title %></a></li><% }) %></ul></section>
+  <% } %>
+</article>
+<%- include('partials/footer') %>

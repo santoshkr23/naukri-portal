@@ -1,0 +1,9 @@
+<%- include('_top') %>
+<h1>Import logs</h1>
+<section class="card flush">
+<table class="log"><tbody>
+  <% logs.forEach(l => { %><tr class="<%= l.level %>"><td class="nowrap small"><%= l.created_at %></td><td><%= l.level %></td><td><%= l.message %></td></tr><% }) %>
+</tbody></table>
+<% if (!logs.length) { %><p class="muted pad">No logs yet.</p><% } %>
+</section>
+<%- include('_bottom') %>

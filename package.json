@@ -1,0 +1,24 @@
+{
+  "name": "naukri-portal",
+  "version": "1.0.0",
+  "description": "Government job alert portal with admin panel and hourly auto-import of job facts",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "import:now": "node src/scraper/cli.js",
+    "test": "node test/run.js"
+  },
+  "engines": { "node": ">=18" },
+  "dependencies": {
+    "better-sqlite3": "^11.7.0",
+    "cheerio": "^1.0.0",
+    "compression": "^1.7.5",
+    "dotenv": "^16.4.7",
+    "ejs": "^3.1.10",
+    "express": "^4.21.2",
+    "node-cron": "^3.0.3",
+    "robots-parser": "^3.0.1",
+    "sharp": "^0.33.5"
+  }
+}

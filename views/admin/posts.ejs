@@ -1,0 +1,31 @@
+<%- include('_top') %>
+<h1>Posts</h1>
+<form class="row filters" method="get">
+  <select name="status"><option value="">All statuses</option><option value="published" <%= filters.status==='published'?'selected':'' %>>Published</option><option value="draft" <%= filters.status==='draft'?'selected':'' %>>Draft</option></select>
+  <select name="category"><option value="">All sections</option><% Object.entries(CATEGORIES).forEach(([k,c]) => { %><option value="<%= k %>" <%= filters.category===k?'selected':'' %>><%= c.name %></option><% }) %></select>
+  <input name="q" value="<%= filters.q %>" placeholder="Search title">
+  <button class="btn ghost">Filter</button>
+  <a class="btn" href="/admin/posts/new">+ New post</a>
+</form>
+<div class="card flush">
+<table>
+  <thead><tr><th>Title</th><th>Section</th><th>Status</th><th>Created</th><th></th></tr></thead>
+  <tbody>
+  <% rows.forEach(p => { %>
+    <tr>
+      <td><a href="/admin/posts/<%= p.id %>"><%= p.title %></a><% if (p.source_url) { %><div class="muted small">auto · <%= new URL(p.source_url).hostname %></div><% } %></td>
+      <td><%= CATEGORIES[p.category]?.short %></td>
+      <td><span class="tag <%= p.status %>"><%= p.status %></span></td>
+      <td class="nowrap small"><%= p.created_at %></td>
+      <td class="nowrap actions">
+        <a href="/<%= p.slug %>/?preview=1" target="_blank">View</a>
+        <form method="post" action="/admin/posts/<%= p.id %>/status"><input type="hidden" name="status" value="<%= p.status==='published'?'draft':'published' %>"><button class="linkbtn"><%= p.status==='published'?'Unpublish':'Publish' %></button></form>
+        <form method="post" action="/admin/posts/<%= p.id %>/delete" onsubmit="return confirm('Delete this post?')"><button class="linkbtn danger">Delete</button></form>
+      </td>
+    </tr>
+  <% }) %>
+  </tbody>
+</table>
+<% if (!rows.length) { %><p class="muted pad">No posts found.</p><% } %>
+</div>
+<%- include('_bottom') %>

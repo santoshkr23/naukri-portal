@@ -1,0 +1,35 @@
+<%- include('_top') %>
+<h1>Settings</h1>
+<form method="post" action="/admin/settings" class="pform">
+  <section class="card">
+    <h2>Site</h2>
+    <div class="grid2">
+      <label>Site name<input name="site_name" value="<%= s.site_name %>"></label>
+      <label>Tagline<input name="site_tagline" value="<%= s.site_tagline %>"></label>
+    </div>
+    <label>Home page intro (also the home meta description)<textarea name="home_intro" rows="2"><%= s.home_intro %></textarea></label>
+    <div class="grid3">
+      <label>Telegram channel URL<input name="telegram_url" value="<%= s.telegram_url %>"></label>
+      <label>WhatsApp channel URL<input name="whatsapp_url" value="<%= s.whatsapp_url %>"></label>
+      <label>Contact e-mail<input name="contact_email" value="<%= s.contact_email %>"></label>
+    </div>
+  </section>
+  <section class="card">
+    <h2>Auto-import</h2>
+    <label class="check"><input type="checkbox" name="auto_publish" value="1" <%= s.auto_publish === '1' ? 'checked' : '' %>> Publish imported posts automatically (posts with too little detail always stay as drafts)</label>
+    <div class="grid2">
+      <label>Max new posts per source per run<input name="max_per_run" type="number" min="1" max="50" value="<%= s.max_per_run %>"></label>
+      <label>Pages to import on a source's first check<input name="first_run_limit" type="number" min="0" max="50" value="<%= s.first_run_limit %>"></label>
+    </div>
+  </section>
+  <section class="card">
+    <h2>SEO &amp; monetisation</h2>
+    <div class="grid3">
+      <label>Google Search Console verification code<input name="google_verification" value="<%= s.google_verification %>"></label>
+      <label>Google Analytics ID (G-…)<input name="ga_id" value="<%= s.ga_id %>"></label>
+      <label>AdSense client (ca-pub-…)<input name="adsense_client" value="<%= s.adsense_client %>"></label>
+    </div>
+  </section>
+  <button class="btn">Save settings</button>
+</form>
+<%- include('_bottom') %>

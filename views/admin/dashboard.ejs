@@ -1,0 +1,39 @@
+<%- include('_top') %>
+<h1>Dashboard</h1>
+<% const c = Object.fromEntries(counts.map(r => [r.status, r.c])); %>
+<div class="stats">
+  <div class="card stat"><span>Published</span><strong><%= c.published || 0 %></strong></div>
+  <div class="card stat"><span>Drafts to review</span><strong><a href="/admin/posts?status=draft"><%= c.draft || 0 %></a></strong></div>
+  <div class="card stat"><span>Added in last 24h</span><strong><%= today %></strong></div>
+  <div class="card stat"><span>Active sources</span><strong><%= sources.filter(s => s.enabled).length %> / <%= sources.length %></strong></div>
+</div>
+
+<div class="two">
+  <section class="card">
+    <h2>Auto-import</h2>
+    <p>Checks every enabled source on a schedule (default: every hour). Only facts are taken — dates, fees, age, vacancies and official links — and the post is written in this site's own template.</p>
+    <form method="post" action="/admin/run-all"><button class="btn" <%= running ? 'disabled' : '' %>><%= running ? 'Import running…' : 'Run import now' %></button></form>
+    <h3>Import a single page</h3>
+    <form method="post" action="/admin/import-url" class="row">
+      <input name="url" type="url" placeholder="https://… job page URL" required>
+      <button class="btn ghost">Import as draft</button>
+    </form>
+  </section>
+  <section class="card">
+    <h2>Published by section</h2>
+    <table><tbody>
+      <% Object.entries(CATEGORIES).forEach(([k, cat]) => { const r = byCat.find(x => x.category === k); %>
+        <tr><td><a href="/admin/posts?category=<%= k %>"><%= cat.name %></a></td><td class="num"><%= r ? r.c : 0 %></td></tr>
+      <% }) %>
+    </tbody></table>
+  </section>
+</div>
+
+<section class="card">
+  <h2>Recent activity</h2>
+  <table class="log"><tbody>
+    <% logs.forEach(l => { %><tr class="<%= l.level %>"><td class="nowrap"><%= l.created_at %></td><td><%= l.level %></td><td><%= l.message %></td></tr><% }) %>
+  </tbody></table>
+  <% if (!logs.length) { %><p class="muted">No activity yet. Add a source and run the import.</p><% } %>
+</section>
+<%- include('_bottom') %>

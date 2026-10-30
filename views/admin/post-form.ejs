@@ -1,0 +1,51 @@
+<%- include('_top') %>
+<% const d = post.data || {}; %>
+<h1><%= post.id ? 'Edit post' : 'New post' %></h1>
+<% if (post.source_url) { %><p class="muted small">Auto-imported from <a href="<%= post.source_url %>" target="_blank" rel="noopener"><%= post.source_url %></a> — check facts against the official notice before publishing.</p><% } %>
+<form method="post" action="/admin/posts/save" class="pform">
+  <input type="hidden" name="id" value="<%= post.id || '' %>">
+  <div class="card">
+    <label>Title (shown as H1 and in Google)<input name="title" value="<%= post.title %>" required maxlength="160"></label>
+    <div class="grid3">
+      <label>Section<select name="category"><% Object.entries(CATEGORIES).forEach(([k,c]) => { %><option value="<%= k %>" <%= post.category===k?'selected':'' %>><%= c.name %></option><% }) %></select></label>
+      <label>Organisation<input name="organization" value="<%= post.organization || '' %>"></label>
+      <label>Total posts<input name="total_posts" value="<%= post.total_posts || '' %>"></label>
+    </div>
+    <div class="grid3">
+      <label>URL slug<input name="slug" value="<%= post.slug || '' %>" placeholder="auto from title"></label>
+      <label>Advt. number<input name="advt" value="<%= d.advt || '' %>"></label>
+      <label>Status<select name="status"><option value="draft" <%= post.status!=='published'?'selected':'' %>>Draft</option><option value="published" <%= post.status==='published'?'selected':'' %>>Published</option></select></label>
+    </div>
+    <label>Meta description (≤160 characters — the snippet Google shows)<textarea name="meta_description" rows="2" maxlength="170"><%= post.meta_description || '' %></textarea></label>
+    <label class="check"><input type="checkbox" name="featured" value="1" <%= post.featured ? 'checked' : '' %>> Feature in the top tiles on the home page</label>
+  </div>
+
+  <div class="card">
+    <label>Introduction (your own words — blank line = new paragraph)<textarea name="intro" rows="5"><%= d.intro || '' %></textarea></label>
+  </div>
+
+  <div class="card">
+    <p class="hint">Table fields: one row per line, columns separated by <code>|</code>. Example: <code>Last Date to Apply | 18 November 2026</code></p>
+    <div class="grid2">
+      <label>Important dates<textarea name="dates" rows="7"><%= rowsToText(d.dates) %></textarea></label>
+      <label>Application fee<textarea name="fees" rows="7"><%= rowsToText(d.fees) %></textarea></label>
+      <label>Age limit<textarea name="age" rows="5"><%= rowsToText(d.age) %></textarea></label>
+      <label>Salary / pay<textarea name="salary" rows="5"><%= rowsToText(d.salary) %></textarea></label>
+    </div>
+    <label>Vacancy table header<input name="vacancyHeader" value="<%= rowsToText([d.vacancyHeader || ['Post Name','Total Posts']]) %>"></label>
+    <label>Vacancy rows<textarea name="vacancy" rows="6"><%= rowsToText(d.vacancy) %></textarea></label>
+    <label>Eligibility (Post | Qualification)<textarea name="eligibility" rows="6"><%= rowsToText(d.eligibility) %></textarea></label>
+    <div class="grid2">
+      <label>Selection process (one stage per line)<textarea name="selection" rows="5"><%= (d.selection||[]).join('\n') %></textarea></label>
+      <label>How-to steps (one per line)<textarea name="howTo" rows="5"><%= (d.howTo||[]).join('\n') %></textarea></label>
+    </div>
+    <label>Important links (Label | https://official-url)<textarea name="links" rows="6"><%= rowsToText(d.links) %></textarea></label>
+    <label>FAQs (Question | Answer) — also added as FAQ schema for Google<textarea name="faqs" rows="6"><%= rowsToText(d.faqs) %></textarea></label>
+    <label>Extra sections (first line = heading, then one item per line; blank line between sections)<textarea name="extra" rows="5"><%= (d.extra||[]).map(e => [e.heading, ...e.items].join('\n')).join('\n\n') %></textarea></label>
+  </div>
+  <div class="row sticky">
+    <button class="btn">Save</button>
+    <% if (post.id) { %><a class="btn ghost" href="/<%= post.slug %>/?preview=1" target="_blank">Preview ↗</a><% } %>
+  </div>
+</form>
+<%- include('_bottom') %>

@@ -1,0 +1,27 @@
+</main>
+<footer class="site-foot">
+  <div class="wrap foot-grid">
+    <div>
+      <strong><%= settings.site_name %></strong>
+      <p>Independent job-alert portal. Not affiliated with any government body — always verify details on the official website before applying.</p>
+    </div>
+    <div>
+      <strong>Sections</strong>
+      <% Object.entries(CATEGORIES).forEach(([k, c]) => { %><a href="/<%= k %>/"><%= c.name %></a><% }) %>
+    </div>
+    <div>
+      <strong>Site</strong>
+      <a href="/about-us/">About Us</a><a href="/contact-us/">Contact Us</a><a href="/disclaimer/">Disclaimer</a><a href="/privacy-policy/">Privacy Policy</a><a href="/feed.xml">RSS Feed</a>
+    </div>
+    <% if (settings.telegram_url || settings.whatsapp_url) { %>
+    <div>
+      <strong>Get alerts</strong>
+      <% if (settings.telegram_url) { %><a href="<%= settings.telegram_url %>" rel="noopener" target="_blank">Telegram channel</a><% } %>
+      <% if (settings.whatsapp_url) { %><a href="<%= settings.whatsapp_url %>" rel="noopener" target="_blank">WhatsApp channel</a><% } %>
+    </div>
+    <% } %>
+  </div>
+  <div class="wrap copy">© <%= new Date().getFullYear() %> <%= settings.site_name %></div>
+</footer>
+</body>
+</html>
