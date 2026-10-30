@@ -187,9 +187,9 @@ async function render(post) {
     cy += 43;
   }
 
-  // student illustration
-  const student = await sharp(STUDENT, { density: 160 }).resize({ height: 470 }).png().toBuffer({ resolveWithObject: true });
-  put({ input: student.data }, W - student.info.width + 6, H - 66 - student.info.height + 4);
+  // person: your uploaded photo (matched to the post), else the drawn student
+  const person = await personLayer(post);
+  L.unshift(person); // behind the boxes and the button
 
   // tiles
   const isJob = f.category === 'latest-jobs' || f.category === 'admission';
@@ -220,13 +220,64 @@ async function render(post) {
   return sharp(bg).composite(L.map(l => ({ ...l, left: Math.max(0, l.left), top: Math.max(0, l.top) }))).jpeg({ quality: 86, mozjpeg: true }).toBuffer();
 }
 
+// ---------- photos ----------
+// Photos for the right side of the banner. Put PNGs with a transparent background (best) or JPGs in
+// assets/banner-people/ in the repo (kept for good), or upload them in Admin → Settings (lost on a wiped disk).
+// A file whose name contains a word from the post title is preferred: police-1.png for police jobs, teacher.png…
+const PEOPLE_DIRS = [path.join(DATA_DIR, 'banner-people'), path.join(__dirname, '..', 'assets', 'banner-people')];
+function listPeople() {
+  const out = [];
+  for (const dir of PEOPLE_DIRS) {
+    try { for (const f of fs.readdirSync(dir)) if (/\.(png|jpe?g|webp)$/i.test(f)) out.push({ name: f, file: path.join(dir, f), uploaded: dir === PEOPLE_DIRS[0], mtime: fs.statSync(path.join(dir, f)).mtimeMs }); } catch {}
+  }
+  return out;
+}
+function pickPerson(post) {
+  const all = listPeople(); if (!all.length) return null;
+  const words = new Set(String(post.title + ' ' + (post.organization || '')).toLowerCase().split(/[^a-z]+/).filter(w => w.length > 2));
+  const score = p => p.name.toLowerCase().replace(/\.[a-z]+$/, '').split(/[^a-z]+/).filter(w => words.has(w)).length;
+  const TOPIC = /^(police|army|navy|airforce|teacher|railway|bank|nurse|doctor|engineer|court|clerk)/i;
+  const best = Math.max(...all.map(score));
+  // a matching photo; otherwise the general ones (not tied to a topic); otherwise any
+  const general = all.filter(p => !TOPIC.test(p.name));
+  const list = best > 0 ? all.filter(p => score(p) === best) : general.length ? general : all;
+  const h = parseInt(crypto.createHash('md5').update(post.slug).digest('hex').slice(0, 8), 16);
+  return list[h % list.length];
+}
+async function personLayer(post) {
+  const p = pickPerson(post);
+  if (p) {
+    try {
+      const img = sharp(p.file).rotate();
+      const { data, info } = await img.ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+      // transparent background? check the corners
+      const a = (x, y) => data[(y * info.width + x) * 4 + 3];
+      const cut = [a(0, 0), a(info.width - 1, 0), a(0, Math.floor(info.height / 2)), a(info.width - 1, Math.floor(info.height / 2))].every(v => v < 20);
+      if (cut) {
+        const out = await sharp(p.file).rotate().trim().resize({ height: 500, width: 360, fit: 'inside' }).png().toBuffer({ resolveWithObject: true });
+        return { input: out.data, left: W - out.info.width - 4, top: H - 66 - out.info.height };
+      }
+      // a normal photo: framed, with rounded corners and a white border
+      const fw = 236, fh = 330;
+      const photo = await sharp(p.file).rotate().resize(fw, fh, { fit: 'cover', position: 'attention' })
+        .composite([{ input: svg(fw, fh, `<rect width="${fw}" height="${fh}" rx="22" fill="#fff"/>`), blend: 'dest-in' }]).png().toBuffer();
+      const framed = await sharp({ create: { width: fw + 12, height: fh + 12, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } } })
+        .composite([{ input: svg(fw + 12, fh + 12, `<rect width="${fw + 12}" height="${fh + 12}" rx="26" fill="#ffffff"/>`) }, { input: photo, left: 6, top: 6 }]).png().toBuffer();
+      return { input: framed, left: 1036, top: 206 };
+    } catch (e) { console.error('banner photo', p.name, e.message); }
+  }
+  const student = await sharp(STUDENT, { density: 160 }).resize({ height: 470 }).png().toBuffer({ resolveWithObject: true });
+  return { input: student.data, left: W - student.info.width + 6, top: H - 66 - student.info.height + 4 };
+}
+
 async function bannerFile(post) {
   fs.mkdirSync(DIR, { recursive: true });
   const f = facts(post);
-  const v = crypto.createHash('md5').update(JSON.stringify([f, getSettings().site_name, 4])).digest('hex').slice(0, 10);
+  const person = pickPerson(post);
+  const v = crypto.createHash('md5').update(JSON.stringify([f, getSettings().site_name, person && [person.name, person.mtime], 5])).digest('hex').slice(0, 10);
   const file = path.join(DIR, `${post.slug}-${v}.jpg`);
   if (!fs.existsSync(file)) fs.writeFileSync(file, await render(post));
   return file;
 }
 
-module.exports = { bannerFile, facts };
+module.exports = { bannerFile, facts, listPeople, PEOPLE_DIRS };

@@ -305,7 +305,34 @@ router.get('/keep-settings', (req, res) => {
 });
 
 // ---------- Settings & logs ----------
-router.get('/settings', (req, res) => res.render('admin/settings', { s: getSettings(), msg: req.query.msg }));
+router.get('/settings', (req, res) => res.render('admin/settings', { s: getSettings(), msg: req.query.msg, people: require('../banner').listPeople(),
+  sample: db.prepare("SELECT slug FROM posts WHERE status='published' AND category='latest-jobs' ORDER BY published_at DESC LIMIT 1").get() }));
+
+// ---------- Banner photos ----------
+const fsx = require('fs'), pathx = require('path');
+const peopleDir = () => require('../banner').PEOPLE_DIRS[0];
+router.post('/banner-people', upload.single('photo'), (req, res) => {
+  const back = m => res.redirect('/admin/settings?msg=' + encodeURIComponent(m) + '#banner-photos');
+  const f = req.file;
+  if (!f) return back('Choose a photo first.');
+  const ext = ({ 'image/png': 'png', 'image/jpeg': 'jpg', 'image/webp': 'webp' })[f.mimetype];
+  if (!ext) return back('Only PNG, JPG or WebP photos.');
+  if (f.size > 8 * 1024 * 1024) return back('That photo is over 8 MB — use a smaller one.');
+  const base = require('../util').slugify(req.body.topic || f.originalname.replace(/\.[a-z]+$/i, '')) || 'person';
+  fsx.mkdirSync(peopleDir(), { recursive: true });
+  let name = `${base}.${ext}`, i = 2; while (fsx.existsSync(pathx.join(peopleDir(), name))) name = `${base}-${i++}.${ext}`;
+  fsx.writeFileSync(pathx.join(peopleDir(), name), f.buffer);
+  back(`Added ${name} — banners now use it.`);
+});
+router.post('/banner-people/:name/delete', (req, res) => {
+  const name = pathx.basename(req.params.name);
+  try { fsx.unlinkSync(pathx.join(peopleDir(), name)); } catch {}
+  res.redirect('/admin/settings?msg=' + encodeURIComponent('Removed ' + name) + '#banner-photos');
+});
+router.get('/banner-people/:name', (req, res, next) => {
+  const p = require('../banner').listPeople().find(x => x.name === pathx.basename(req.params.name));
+  p ? res.sendFile(p.file) : next();
+});
 router.post('/settings', (req, res) => {
   setSetting('auto_news', req.body.auto_news === '1' ? '1' : '0');
   if (req.body.auto_news === '1') require('../news').backfillNews();

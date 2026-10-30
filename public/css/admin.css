@@ -85,3 +85,7 @@ th.ck,td.ck{width:34px;padding-right:0}
 .status-list li.warn::before{content:"!";color:#b45309;left:9px}
 .steps-list{margin:6px 0 10px;padding-left:20px;line-height:1.7}
 .social-prev img{width:360px}
+.people-grid{display:flex;flex-wrap:wrap;gap:12px;margin:10px 0}
+.people-grid figure{margin:0;width:130px;text-align:center;font-size:12.5px}
+.people-grid img{width:130px;height:160px;object-fit:contain;background:#eef3f1;border-radius:8px;display:block;margin-bottom:4px}
+.people-grid form{display:inline}
