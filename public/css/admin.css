@@ -83,3 +83,4 @@ th.ck,td.ck{width:34px;padding-right:0}
 .status-list li.ok::before{content:"✓";color:#15803d}
 .status-list li.bad::before{content:"✗";color:#b42318}
 .status-list li.warn::before{content:"!";color:#b45309;left:9px}
+.steps-list{margin:6px 0 10px;padding-left:20px;line-height:1.7}

@@ -222,7 +222,8 @@ router.get('/social', (req, res) => {
   const latest = db.prepare("SELECT id, slug, title FROM posts WHERE category='news' AND status='published' ORDER BY published_at DESC, id DESC LIMIT 1").get();
   const logRows = db.prepare(`SELECT l.*, p.title, p.slug FROM social_log l LEFT JOIN posts p ON p.id=l.post_id ORDER BY l.id DESC LIMIT 60`).all();
   const queued = db.prepare('SELECT COUNT(*) c FROM social_queue').get().c;
-  const fromEnv = Object.fromEntries(Object.values(social.PLATFORMS).flatMap(p => p.keys).map(k => [k, !s[k] && !!process.env[k.toUpperCase()]]));
+  const inDb = new Set(db.prepare('SELECT key FROM settings').all().map(r => r.key));
+  const fromEnv = Object.fromEntries(Object.values(social.PLATFORMS).flatMap(p => p.keys).map(k => [k, !inDb.has(k) && !!process.env[k.toUpperCase()]]));
   res.render('admin/social', { s, c, PLATFORMS: social.PLATFORMS, SECRET: social.SECRET_KEYS, latest, logRows, queued, fromEnv, msg: req.query.msg,
     baseUrl: require('../db').siteUrl(), baseFrom: process.env.BASE_URL ? 'BASE_URL' : process.env.RENDER_EXTERNAL_URL ? 'Render' : s.site_url ? 'detected' : '',
     lastOk: db.prepare("SELECT created_at FROM social_log WHERE status='ok' ORDER BY id DESC LIMIT 1").get()?.created_at,
@@ -272,6 +273,12 @@ router.get('/social/preview/:id/:kind.jpg', async (req, res, next) => {
   if (!p || p.category !== 'news' || !['square', 'tall'].includes(req.params.kind)) return next();
   const { file } = await require('../social/card').cardFile(p, req.params.kind);
   res.type('jpg').sendFile(file);
+});
+
+// ---------- Keep settings across restarts ----------
+router.get('/keep-settings', (req, res) => {
+  const { settingsAsEnv } = require('../db');
+  res.render('admin/keep-settings', { envText: settingsAsEnv(), onRender: !!(process.env.RENDER || process.env.RENDER_EXTERNAL_URL), msg: req.query.msg });
 });
 
 // ---------- Settings & logs ----------

@@ -1,5 +1,6 @@
 <%- include('_top') %>
 <h1>Auto-import sources</h1>
+<% if (process.env.RENDER || process.env.RENDER_EXTERNAL_URL) { %><div class="flash">On Render's free plan, what you save here is wiped when the server restarts. After saving, open <a href="/admin/keep-settings"><strong>Keep settings</strong></a> and paste them into Render once.</div><% } %>
 <p class="muted">Add up to as many sites as you like. Each source is checked on the schedule; new pages are found, facts are pulled out, and a post is written in your template. The first check of a new source imports only the newest few pages (see Settings), so the site isn't flooded with old posts.</p>
 <p class="muted small">Tip: official sources work best and are the most reliable — e.g. the "What's new" / recruitment page of a commission, or a site's RSS feed (often <code>/feed/</code> on WordPress sites). Pages blocked by a site's robots.txt are skipped automatically.</p>
 

@@ -1,0 +1,32 @@
+<%- include('_top') %>
+<h1>Keep your settings after a restart</h1>
+<p class="muted"><% if (onRender) { %>This site runs on Render. On Render's <strong>free</strong> plan the server's disk is wiped every time it restarts — after every deploy and every time it wakes up from sleep — so settings saved in this admin (Telegram token, social accounts, site name, sources…) are lost.<% } else { %>If your host wipes the server's disk on restart or deploy, settings saved in this admin are lost with it.<% } %> Environment variables are kept, so store your settings there.</p>
+
+<section class="card">
+  <h2>1. Copy your current settings</h2>
+  <% if (envText) { %>
+    <p class="muted small">Everything you changed in Settings, Social media and Auto-import sources, including tokens. Keep it private — anyone with these lines can post to your accounts.</p>
+    <textarea id="envText" rows="<%= Math.min(18, envText.split('\n').length + 1) %>" readonly style="font-family: ui-monospace, monospace; font-size: 13px"><%= envText %></textarea>
+    <p><button type="button" class="btn" id="copyBtn">Copy for Render</button> <span id="copied" class="muted small"></span></p>
+  <% } else { %>
+    <p class="flash err">Nothing saved yet — or the server has already restarted and wiped them. Enter your settings again in <a href="/admin/settings">Settings</a> and <a href="/admin/social">Social media</a>, then come back here straight away.</p>
+  <% } %>
+</section>
+
+<section class="card">
+  <h2>2. Paste them into Render</h2>
+  <ol class="steps-list">
+    <li>Open <strong>dashboard.render.com</strong> → your service → <strong>Environment</strong>.</li>
+    <li>Click <strong>Add from .env</strong>, paste, and click <strong>Add variables</strong>, then <strong>Save changes</strong>. Render restarts the site with them.</li>
+    <li>After that, settings come back on every restart. Values you change here later win until the next restart — copy and paste again whenever you change something.</li>
+  </ol>
+  <p class="muted small">The permanent fix is a disk: Render Starter plan + a 1 GB disk (uncomment the <code>disk:</code> lines in <code>render.yaml</code>). Then everything — posts you deleted, social history, settings — is kept and this page isn't needed.</p>
+</section>
+<script>
+document.getElementById('copyBtn')?.addEventListener('click', async () => {
+  const t = document.getElementById('envText');
+  try { await navigator.clipboard.writeText(t.value); } catch { t.select(); document.execCommand('copy'); }
+  document.getElementById('copied').textContent = 'Copied — now paste it in Render';
+});
+</script>
+<%- include('_bottom') %>

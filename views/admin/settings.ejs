@@ -1,5 +1,6 @@
 <%- include('_top') %>
 <h1>Settings</h1>
+<% if (process.env.RENDER || process.env.RENDER_EXTERNAL_URL) { %><div class="flash">On Render's free plan, what you save here is wiped when the server restarts. After saving, open <a href="/admin/keep-settings"><strong>Keep settings</strong></a> and paste them into Render once.</div><% } %>
 <form method="post" action="/admin/settings" class="pform">
   <section class="card">
     <h2>Site</h2>

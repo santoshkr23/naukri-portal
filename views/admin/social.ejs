@@ -1,5 +1,6 @@
 <%- include('_top') %>
 <h1>Social media</h1>
+<% if (process.env.RENDER || process.env.RENDER_EXTERNAL_URL) { %><div class="flash">On Render's free plan, what you save here is wiped when the server restarts. After saving, open <a href="/admin/keep-settings"><strong>Keep settings</strong></a> and paste them into Render once.</div><% } %>
 <p class="muted">Every new news story is posted automatically to the accounts you turn on below, with its image (Hindi headline) and the link to the story. A few are posted every 5 minutes so the accounts never send a burst. To post older stories, tick them in <a href="/admin/posts?category=news">Posts</a> and choose <strong>Share to social</strong>.</p>
 <% const ready = Object.keys(PLATFORMS).filter(p => c[p].ready); %>
 <section class="card status-list">
