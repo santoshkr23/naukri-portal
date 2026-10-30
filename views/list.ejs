@@ -3,6 +3,12 @@
 <div class="wrap narrow">
   <nav class="crumbs"><a href="/">Home</a> › <span><%= heading %></span></nav>
   <h1 class="page-h"><%= heading %></h1>
+  <% if (typeof yearTabs !== 'undefined' && yearTabs.length > 1) { %>
+    <nav class="year-tabs" aria-label="Filter by year">
+      <a href="/<%= catKey %>/" class="<%= !year ? 'on' : '' %>">All</a>
+      <% yearTabs.forEach(y => { %><a href="/<%= catKey %>/?year=<%= y %>" class="<%= year === y ? 'on' : '' %>"><%= y %></a><% }) %>
+    </nav>
+  <% } %>
   <% if (!rows.length) { %><p class="empty">Nothing found<%= q ? ' for “' + q + '”' : '' %>.</p><% } %>
   <ul class="post-list">
     <% rows.forEach(p => { %>

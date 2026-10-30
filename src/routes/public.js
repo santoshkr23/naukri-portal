@@ -1,6 +1,6 @@
 const express = require('express');
 const { db, CATEGORIES } = require('../db');
-const { listPosts, getBySlug, related } = require('../posts');
+const { listPosts, getBySlug, related, yearClause } = require('../posts');
 const { homeSchema, postSchema, categorySchema } = require('../seo');
 const { ogImage } = require('../og');
 const { fmtDate } = require('../util');
@@ -39,8 +39,11 @@ router.get('/og/:slug.png', async (req, res, next) => {
 
 router.get('/', (req, res) => {
   const boxes = {};
-  for (const c of Object.keys(CATEGORIES)) boxes[c] = listPosts({ category: c, limit: 25 }).rows;
-  const highlights = db.prepare(`SELECT slug,title,category FROM posts WHERE status='published' ORDER BY featured DESC, published_at DESC LIMIT 12`).all();
+  // Home page shows only current-year updates (plus next year's, e.g. "NVS Admit Card 2027")
+  const Y = new Date().getFullYear(), homeYears = [Y, Y + 1];
+  for (const c of Object.keys(CATEGORIES)) boxes[c] = listPosts({ category: c, limit: 25, years: homeYears }).rows;
+  const hy = yearClause(homeYears);
+  const highlights = db.prepare(`SELECT slug,title,category FROM posts WHERE status='published' AND ${hy.sql} ORDER BY featured DESC, published_at DESC LIMIT 12`).all(...hy.args);
   const s = res.locals.settings;
   res.render('home', {
     boxes, highlights, fmtDate,
@@ -62,15 +65,18 @@ router.get('/:slug/', (req, res, next) => {
 
   if (CATEGORIES[slug]) {
     const page = Math.max(1, parseInt(req.query.page) || 1);
-    const { rows, total } = listPosts({ category: slug, limit: PER_PAGE, offset: (page - 1) * PER_PAGE });
+    const year = /^20\d{2}$/.test(req.query.year || '') ? +req.query.year : null;
+    const { rows, total } = listPosts({ category: slug, limit: PER_PAGE, offset: (page - 1) * PER_PAGE, years: year ? [year] : null });
+    const Y = new Date().getFullYear();
+    const yearTabs = [Y + 1, Y, Y - 1].filter(y => listPosts({ category: slug, limit: 1, years: [y] }).total > 0);
     const pages = Math.max(1, Math.ceil(total / PER_PAGE));
     const name = CATEGORIES[slug].name;
-    return res.render('list', { heading: `${name} ${new Date().getFullYear()}`, rows, q: '', fmtDate, page, pages, catKey: slug,
+    return res.render('list', { heading: `${name}${year ? ' ' + year : ''}`, rows, q: '', fmtDate, page, pages, catKey: slug, year, yearTabs,
       meta: { title: `${name} ${new Date().getFullYear()} – Latest Updates${page > 1 ? ` (Page ${page})` : ''} | ${s.site_name}`,
         description: `All the latest ${name.toLowerCase()} updates for central and state government exams, with dates and direct official links.`,
-        canonical: `${b}/${slug}/${page > 1 ? `?page=${page}` : ''}`,
-        prev: page > 1 ? `${b}/${slug}/${page > 2 ? `?page=${page - 1}` : ''}` : null,
-        next: page < pages ? `${b}/${slug}/?page=${page + 1}` : null },
+        canonical: `${b}/${slug}/${year ? `?year=${year}` : page > 1 ? `?page=${page}` : ''}`,
+        prev: !year && page > 1 ? `${b}/${slug}/${page > 2 ? `?page=${page - 1}` : ''}` : null,
+        next: !year && page < pages ? `${b}/${slug}/?page=${page + 1}` : null },
       schema: categorySchema(slug, s, b) });
   }
 

@@ -134,3 +134,7 @@ tbody tr:last-child td{border-bottom:0}
 .board.mini h2{font-size:15.5px;padding:8px 12px}
 .board.mini li{font-size:14px;padding:5px 0}
 @media (max-width:600px){.prevnext{grid-template-columns:1fr}.pn-next{text-align:left}.pn-home{justify-self:start}}
+.year-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 14px}
+.year-tabs a{border:1px solid var(--line);background:var(--paper);border-radius:999px;padding:4px 14px;font-weight:600;color:var(--ink)}
+.year-tabs a.on{background:var(--brand);border-color:var(--brand);color:#fff}
+.year-tabs a:hover{text-decoration:none;border-color:var(--brand2)}

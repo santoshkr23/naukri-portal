@@ -5,8 +5,15 @@ const { uniqueSlug, nowSql, fingerprint } = require('./util');
 
 const PUBLIC = "status='published'";
 
-function listPosts({ category, limit = 20, offset = 0, q } = {}) {
+// A post's "year" is the year in its title (e.g. "... Admit Card 2026"); titles without a year use the publish year.
+function yearClause(years) {
+  const parts = years.map(() => "(title LIKE ? OR (title NOT GLOB '*20[0-9][0-9]*' AND substr(published_at,1,4)=?))");
+  return { sql: `(${parts.join(' OR ')})`, args: years.flatMap(y => [`%${y}%`, String(y)]) };
+}
+
+function listPosts({ category, limit = 20, offset = 0, q, years } = {}) {
   const where = [PUBLIC]; const args = [];
+  if (years && years.length) { const y = yearClause(years); where.push(y.sql); args.push(...y.args); }
   if (category) { where.push('category=?'); args.push(category); }
   if (q) { where.push('(title LIKE ? OR organization LIKE ?)'); args.push(`%${q}%`, `%${q}%`); }
   const rows = db.prepare(`SELECT id,slug,title,category,organization,total_posts,last_date,published_at,updated_at,featured
@@ -54,4 +61,4 @@ function savePost(p, id) {
   return getById(info.lastInsertRowid);
 }
 
-module.exports = { listPosts, getBySlug, getById, related, savePost, clearOg };
+module.exports = { yearClause, listPosts, getBySlug, getById, related, savePost, clearOg };
