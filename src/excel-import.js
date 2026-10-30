@@ -246,8 +246,10 @@ function todoRow(row, col, report) {
   const title = t(/^post title/), category = categoryOf(t(/^section/));
   if (!title || /done|skip|ignore|posted/i.test(t(/^status/))) return;
   if (!category) { report.skipped.push(`${title}: unknown section "${t(/^section/)}"`); return; }
-  const fp = fingerprint(title, category);
-  if (db.prepare('SELECT 1 FROM posts WHERE fingerprint=?').get(fp) || nearMatch(title, category, category === 'latest-jobs' ? report.closedTitles : [])) return;
+  // Words in brackets matter here: "Combined JE (Electrical)" and "Combined JE (Mechanical)" are two different drafts
+  const fp = fingerprint(title.replace(/[()]/g, ' '), category);
+  if (db.prepare('SELECT 1 FROM posts WHERE fingerprint=?').get(fp) ||
+    db.prepare("SELECT 1 FROM posts WHERE fingerprint=? AND status='published'").get(fingerprint(title, category)) || nearMatch(title, category, category === 'latest-jobs' ? report.closedTitles : [])) return;
   const link = t(/official link/);
   savePost({
     title, base: title, slug: title, category, status: 'draft', fingerprint: fp,
