@@ -161,8 +161,25 @@ tbody tr:last-child td{border-bottom:0}
 .board.mini h2{font-size:15.5px;padding:8px 12px}
 .board.mini li{font-size:14px;padding:5px 0}
 @media (max-width:600px){.prevnext{grid-template-columns:1fr}.pn-next{text-align:left}.pn-home{justify-self:start}}
+.year-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 14px}
+.year-tabs a{border:1px solid var(--line);background:var(--paper);border-radius:999px;padding:4px 14px;font-weight:600;color:var(--ink)}
+.year-tabs a.on{background:var(--brand);border-color:var(--brand);color:#fff}
+.year-tabs a:hover{text-decoration:none;border-color:var(--brand2)}
+.seo-copy{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);padding:20px 22px;margin-bottom:24px;max-width:1180px}
+.seo-copy h2{margin:0 0 10px;font-size:22px}
+.seo-copy h3{font-size:18px;margin:22px 0 8px;color:var(--brand)}
+.seo-copy h4{margin:0 0 4px;font-size:15.5px}
+.seo-copy p,.seo-copy li{max-width:75ch}
+.seo-copy ul{padding-left:20px}
+.seo-copy li{margin:5px 0}
+.sector-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
+.sector-grid>div{border:1px solid var(--line);border-radius:8px;padding:12px 14px;background:var(--bg)}
+.sector-grid p{margin:0;font-size:14.5px}
+.seo-copy details{border:1px solid var(--line);border-radius:8px;padding:9px 13px;margin:8px 0}
+.seo-copy summary{font-weight:700;cursor:pointer}
+.seo-copy details p{margin:6px 0 0}
 </style>
-<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebSite","name":"NaukriSetu","url":"https://preview.local/","potentialAction":{"@type":"SearchAction","target":"https://preview.local/search/?q={search_term_string}","query-input":"required name=search_term_string"}},{"@type":"Organization","name":"NaukriSetu","url":"https://preview.local/","logo":"https://preview.local/static/logo.png"}]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebSite","name":"NaukriSetu","url":"https://preview.local/","potentialAction":{"@type":"SearchAction","target":"https://preview.local/search/?q={search_term_string}","query-input":"required name=search_term_string"}},{"@type":"Organization","name":"NaukriSetu","url":"https://preview.local/","logo":"https://preview.local/static/logo.png"},{"@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Is NaukriSetu a government website?","acceptedAnswer":{"@type":"Answer","text":"No. It is an independent information portal. Always apply and pay fees only on the official website linked in each post."}},{"@type":"Question","name":"How often are updates added?","acceptedAnswer":{"@type":"Answer","text":"New notifications are checked every hour, and each post shows when it was published and last updated."}},{"@type":"Question","name":"Which details should I verify before applying?","acceptedAnswer":{"@type":"Answer","text":"The last date, fee, age limit and qualification. These can change through a corrigendum, so open the official notification from the Important Links table."}}]}]}</script>
 
 
 </head>
@@ -388,11 +405,46 @@ tbody tr:last-child td{border-bottom:0}
   
 </section>
 
-<section class="wrap about-block">
-  <h2>How to use NaukriSetu</h2>
-  <p>Each update is summarised in the same layout: important dates first, then fees, age limit, vacancies, eligibility and the official links. Open a post, check whether you are eligible, then follow the link to the official website to apply, download your admit card or see your result.</p>
-  <p>Dates and links are taken from official notices. If anything differs, the official notification is always correct.</p>
+
+<section class="wrap seo-copy" aria-labelledby="seo-h">
+  <h2 id="seo-h">Latest Sarkari Naukri, Results &amp; Admit Cards 2026</h2>
+  <p>NaukriSetu tracks new government job notifications from central and state departments and turns each one into a clear one-page summary: important dates, application fee, age limit, vacancies, eligibility, selection process and direct links to the official website. The same layout is used for admit cards, answer keys, sarkari results, syllabus updates and admission forms, so you always know where to look.</p>
+  <p>Use the sections above to browse by type, or search for an exam by name. Every post links to the recruiting body's own website, which is the only place to apply, pay fees or download documents.</p>
+
+  <h3>Before you fill any online form</h3>
+  <ul>
+    <li><strong>Check eligibility first.</strong> Confirm the minimum qualification, age limit and its cut-off date, and any physical or language requirements in the official notification.</li>
+    <li><strong>Match your certificates.</strong> Name, date of birth, category and marks in the form must be exactly as they appear on your documents.</li>
+    <li><strong>Get the photo and signature right.</strong> Most rejected forms fail here. Follow the size, format and background rules given in the notice.</li>
+    <li><strong>Watch two deadlines.</strong> The last date to apply and the last date to pay the fee are sometimes different.</li>
+    <li><strong>Keep proof.</strong> Save the final application and fee receipt as PDF and keep a printed copy.</li>
+  </ul>
+
+  <h3>After you apply: admit card, answer key and result</h3>
+  <p>Once applications close, the department announces the exam schedule. Admit cards usually come out a few days to two weeks before the exam, followed by a provisional answer key with a short window to raise objections. The final result, cut-off marks and the list of candidates for the next stage come after that. Each of these steps gets its own post on NaukriSetu.</p>
+
+  <h3>Popular government job sectors</h3>
+  <div class="sector-grid">
+    <div><h4>Civil services (UPSC &amp; State PSC)</h4><p>IAS, IPS, IFS and state administrative services through prelims, mains and interview. Usually needs a graduate degree.</p></div>
+    <div><h4>Railway jobs (RRB / RRC)</h4><p>NTPC, Group D, Technician, Station Master and Apprentice posts for 10th, ITI, 12th, diploma and graduate candidates, selected through CBT.</p></div>
+    <div><h4>Bank jobs (IBPS, SBI, RBI)</h4><p>Clerk, PO and Specialist Officer posts through prelims and mains, mostly for graduates.</p></div>
+    <div><h4>SSC jobs</h4><p>CGL, CHSL, MTS, GD Constable, JE and Stenographer exams for central ministries and forces.</p></div>
+    <div><h4>Defence &amp; police</h4><p>Army, Navy, Air Force, BSF, CRPF, CISF, ITBP, Coast Guard and state police, with written, physical and medical tests.</p></div>
+    <div><h4>Teaching jobs</h4><p>CTET, state TETs, KVS, NVS and state TGT/PGT recruitments, generally needing a degree with B.Ed or D.El.Ed.</p></div>
+  </div>
+
+  <h3>Jobs by qualification</h3>
+  <p><strong>10th pass:</strong> Railway Group D and apprentices, police constable, MTS, GD constable, forest guard and peon or driver posts in many departments. <strong>12th pass:</strong> SSC CHSL, Railway NTPC under-graduate posts, NDA, Air Force airmen and clerk or typist posts. <strong>Graduates:</strong> SSC CGL, bank PO and clerk, Railway NTPC graduate posts, state PSC exams and UPSC. <strong>ITI and diploma:</strong> Technician, Junior Engineer and apprentice posts in railways and PSUs.</p>
+
+  <h3>Admissions and entrance exams</h3>
+  <p>Alongside jobs, NaukriSetu covers application forms and admit cards for entrance exams such as CLAT, CUET, JEE Main, NEET, GATE, CTET and university admissions.</p>
+
+  <h3>Frequently asked questions</h3>
+  <details><summary>Is NaukriSetu a government website?</summary><p>No. It is an independent information portal. Always apply and pay fees only on the official website linked in each post.</p></details>
+  <details><summary>How often are updates added?</summary><p>New notifications are checked every hour, and each post shows when it was published and last updated.</p></details>
+  <details><summary>Which details should I verify before applying?</summary><p>The last date, fee, age limit and qualification. These can change through a corrigendum, so open the official notification from the Important Links table.</p></details>
 </section>
+
 </main>
 <footer class="site-foot">
   <div class="wrap foot-grid">
