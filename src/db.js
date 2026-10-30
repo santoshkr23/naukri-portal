@@ -101,7 +101,11 @@ const CATEGORIES = {
   'answer-key': { name: 'Answer Key', short: 'Answer Key', color: 'amber' },
   'admission': { name: 'Admission', short: 'Admission', color: 'rose' },
   'syllabus': { name: 'Syllabus', short: 'Syllabus', color: 'slate' },
-  'exam-date': { name: 'Exam Date', short: 'Exam Date', color: 'violet' }
+  'exam-date': { name: 'Exam Date', short: 'Exam Date', color: 'violet' },
+  // Extra sections from the Excel sheet; their home-page box is hidden until they have a published post
+  'certificate': { name: 'Certificate', short: 'Certificate', color: 'indigo', optional: true },
+  'outsourcing': { name: 'Outsourcing', short: 'Outsourcing', color: 'teal', optional: true },
+  'important': { name: 'Important', short: 'Important', color: 'rose', optional: true }
 };
 
 function parsePost(row) {

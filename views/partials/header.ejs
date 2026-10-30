@@ -12,7 +12,7 @@
   <nav class="mainnav" aria-label="Main">
     <div class="wrap navscroll">
       <a href="/" class="<%= currentPath === '/' ? 'on' : '' %>">Home</a>
-      <% Object.entries(CATEGORIES).forEach(([k, c]) => { %>
+      <% Object.entries(CATEGORIES).forEach(([k, c]) => { if (c.optional && !(navCats || []).includes(k)) return; %>
         <a href="/<%= k %>/" class="<%= currentPath === '/' + k + '/' ? 'on' : '' %>"><%= c.name %></a>
       <% }) %>
     </div>

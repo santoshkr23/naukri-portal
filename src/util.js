@@ -1,5 +1,6 @@
 const RESERVED = new Set(['admin', 'static', 'search', 'og', 'feed', 'sitemap', 'robots', 'about-us', 'contact-us',
-  'disclaimer', 'privacy-policy', 'latest-jobs', 'admit-card', 'result', 'answer-key', 'admission', 'syllabus', 'exam-date']);
+  'disclaimer', 'privacy-policy', 'latest-jobs', 'admit-card', 'result', 'answer-key', 'admission', 'syllabus', 'exam-date',
+  'certificate', 'outsourcing', 'important']);
 
 function slugify(s) {
   return String(s || '').toLowerCase().normalize('NFKD').replace(/[̀-ͯ]/g, '')

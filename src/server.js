@@ -27,6 +27,7 @@ app.use((req, res, next) => {
   res.locals.settings = getSettings();
   res.locals.baseUrl = (process.env.BASE_URL || `${req.protocol}://${req.get('host')}`).replace(/\/$/, '');
   res.locals.CATEGORIES = CATEGORIES;
+  res.locals.navCats = require('./db').db.prepare("SELECT DISTINCT category FROM posts WHERE status='published'").all().map(r => r.category);
   res.locals.currentPath = req.path;
   res.locals.meta = {};
   res.locals.schema = '';
@@ -41,7 +42,11 @@ app.use((err, req, res, next) => { console.error(err); res.status(500).send('Som
 
 const port = process.env.PORT || 3000;
 if (require.main === module) {
-  if (process.env.SEED_JOBS !== '0') { const n = require('./seed-jobs').seedJobs(); if (n) console.log(`Added ${n} starter job posts`); }
+  // content/posts.xlsx (your Excel sheet) is the source of posts when present; otherwise the starter set in jobs-data.js is used
+  const xl = require('./excel-import');
+  if (xl.hasDefaultFile() && process.env.IMPORT_EXCEL !== '0') {
+    xl.importWorkbook().then(r => console.log(`Excel: ${r.created.length} new, ${r.updated.length} updated, ${r.drafts.length} drafts`)).catch(e => console.error('Excel import failed:', e.message));
+  } else if (process.env.SEED_JOBS !== '0') { const n = require('./seed-jobs').seedJobs(); if (n) console.log(`Added ${n} starter job posts`); }
   if (process.env.SEED_DEMO === '1') { const n = require('./seed').seed(); if (n) console.log(`Seeded ${n} sample posts`); }
   app.listen(port, () => console.log(`Site running on http://localhost:${port}  (admin: /admin)`));
   require('./scraper').startScheduler();

@@ -11,7 +11,7 @@ const get = (rows, re) => ((rows || []).find(([k]) => re.test(k)) || [])[1];
 const TEMPLATES = {
   'admit-card': u => ({
     title: `${u.short} ${u.name}: Download Link & Exam Date`,
-    intro: [`${u.org} has issued admit cards for ${u.name.replace(/ Admit Card.*$/i, '')}${u.total ? ` (${u.total} posts)` : ''}. ${get(u.dates, /exam|test/i) ? `The exam is on ${get(u.dates, /exam|test/i)}.` : ''}`,
+    intro: [`${u.org} has issued admit cards for ${u.name.replace(/ Admit Card.*$/i, '')}${u.total ? ` (${u.total} posts)` : ''}. ${get(u.dates, /^(?!.*(city|admit)).*(exam|test)/i) ? `The exam is on ${get(u.dates, /^(?!.*(city|admit)).*(exam|test)/i)}.` : ''}`,
       `To download it you will need your ${u.login.join(' and ').toLowerCase()}. Check your name, photo, exam centre and reporting time as soon as you download it, and contact the exam helpline straight away if anything is wrong.`],
     howTo: ['Open the admit card link from the Important Links table.', `Log in with your ${u.login.join(' and ').toLowerCase()}.`, 'Download the admit card and check every detail on it.', 'Print two copies and carry one with an original photo ID to the exam centre.'],
     faqs: [[`When was the ${u.short} admit card released?`, `On ${get(u.dates, /admit/i) || 'the date shown above'}.`], [`What do I need to download it?`, `Your ${u.login.join(' and ').toLowerCase()}.`], [`What should I carry to the exam centre?`, 'The printed admit card and an original photo ID such as Aadhaar, PAN, voter ID or passport.']]
@@ -42,7 +42,7 @@ const TEMPLATES = {
     intro: [`This page sets out the ${u.short} ${u.name.replace('&', 'and')}: how many questions each subject carries, the marking scheme, and the main topics to prepare.`,
       'Use the pattern table to plan your time across subjects, then work through the topic list. Always cross-check with the latest official notice, since the commission can change the pattern.'],
     howTo: ['Note the marks per subject and give more time to high-weight sections.', 'Cover each topic in the list, then practise previous-year papers.', 'Take timed mock tests to get used to the exam length and negative marking.'],
-    faqs: [['Is there negative marking?', (u.notes || []).find(n => /negative|deduct/i.test(n)) || 'Check the official notice.'], ['How many questions are there?', u.pattern.rows.map(r => `${r[1]}: ${r[2]}`).join('; ') + '.']]
+    faqs: [['Is there negative marking?', (u.notes || []).find(n => /negative|deduct/i.test(n)) || 'Check the official notice.'], ...(u.pattern?.rows?.length ? [['How many questions are there?', u.pattern.rows.map(r => `${r[1]}: ${r[2]}`).join('; ') + '.']] : [])]
   }),
   'exam-date': u => ({
     title: `${u.short} ${u.name}: Full Schedule`,
@@ -50,12 +50,20 @@ const TEMPLATES = {
       'Admit cards are usually released a few days before the exam on the official website. The full schedule and official notice are below.'],
     howTo: ['Open the exam date notice from the Important Links table.', 'Note your exam date and shift once your admit card is out.', 'Check the official website regularly for any change in dates.'],
     faqs: [[`When is the exam?`, u.dates.map(([k, v]) => `${k}: ${v}`).join('; ') + '.'], ['When will the admit card come?', get(u.dates, /admit/i) || 'Shortly before the exam.']]
+  }),
+  // Certificate, Outsourcing, Important and any other section
+  generic: u => ({
+    title: `${u.short} ${u.name}: Dates, Details & Official Link`,
+    intro: [`${u.org ? `${u.org} has released` : 'Here is'} the latest update on ${u.short} ${u.name}${u.total ? ` (${u.total} posts)` : ''}.${get(u.dates, /last date/i) ? ` The last date is ${get(u.dates, /last date/i)}.` : ''}`,
+      'All key dates, fees and the official links are listed below. Please confirm every detail on the official website before you act on it.'],
+    howTo: ['Open the official link from the Important Links table.', ...(u.login?.length ? [`Log in with your ${u.login.join(' and ').toLowerCase()}.`] : []), 'Follow the steps on the official website and save a copy of any confirmation page.'],
+    faqs: [...(get(u.dates, /last date/i) ? [['What is the last date?', `${get(u.dates, /last date/i)}.`]] : []), ...((u.fees || []).length ? [['Is there a fee?', u.fees.map(([k, v]) => `${k}: ${v}`).join('; ') + '.']] : [])]
   })
 };
 
 function buildUpdate(u) {
-  const t = TEMPLATES[u.category](u);
-  const base = `${u.short} ${u.name}`;
+  const t = (TEMPLATES[u.category] || TEMPLATES.generic)(u);
+  const base = u.base || `${u.short} ${u.name}`;
   const official = (u.links.find(([l]) => /official website/i.test(l)) || u.links[u.links.length - 1])[1];
   t.faqs.push(['What is the official website?', host(official)]);
   const data = {

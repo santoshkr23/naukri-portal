@@ -22,7 +22,7 @@
 <% } %>
 
 <section class="wrap boards">
-  <% Object.entries(CATEGORIES).forEach(([k, c]) => { %>
+  <% Object.entries(CATEGORIES).forEach(([k, c]) => { if (c.optional && !boxes[k].length) return; %>
     <div class="board c-<%= c.color %>">
       <h2><a href="/<%= k %>/"><%= c.name %></a></h2>
       <% if (boxes[k].length) { %>

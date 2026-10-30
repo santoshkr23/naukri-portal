@@ -24,6 +24,23 @@ npm start                 # http://localhost:3000   admin: http://localhost:3000
 npm test                  # end-to-end test with a fictional source site
 ```
 
+## Posting from your Excel sheet
+
+`content/posts.xlsx` is your posting sheet. Each **sheet name is a section** of the site:
+
+| Sheet | Section | Format |
+|---|---|---|
+| Latest Jobs | Latest Jobs | Post name, Organisation, Last date, All important dates, Application fee, Min/Max age, Vacancy (post – count), Eligibility (post – qualification), Pay, Selection process, Official links |
+| Admit Card, Result, Answer Key, Admission, Syllabus, Exam Date, Certificate, Outsourcing, Important | same name | Title, Organisation, Key dates, Login needed, Next stages, Fee, Eligibility, Exam pattern (`a \| b \| c` rows), Marking / notes, Main topics, Official links |
+| All Posts – To Write | from the Section column | Titles not yet on the site are added as **drafts**; set Status to "Done" to stop that |
+
+- One item per line inside a cell: `Label: value` for dates, fees and links, `Post – value` for vacancy and eligibility.
+- Your own text in **YOUR short info / YOUR how to apply / YOUR FAQs** (`Q: … A: …`) replaces the generated text. Cells starting with "EXAMPLE" are ignored.
+- Rows are matched to posts by title, so editing a row and importing again **updates** that post. Jobs whose last date has passed are skipped.
+- Columns are found by their header text, so you can reorder them or add your own.
+
+Three ways to import: **Admin → Import Excel** (upload the file), `npm run import:excel -- path/to/file.xlsx`, or commit a new `content/posts.xlsx` — it is imported every time the server starts (set `IMPORT_EXCEL=0` to turn that off).
+
 ## Deploy (needs an always-on server)
 
 The hourly import needs a process that never sleeps, plus a persistent disk for the SQLite database. GitHub Pages and the free Render tier won't work for this.

@@ -8,7 +8,7 @@ const JOBS = require('./jobs-data');
 const fmt = iso => new Date(iso + 'T00:00:00').toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' });
 
 function buildPost(j) {
-  const base = `${j.short} ${j.name}`;
+  const base = j.base || `${j.short} ${j.name}`;
   const lastTxt = fmt(j.last);
   const start = (j.dates.find(([k]) => /starts/i.test(k)) || [])[1];
   const exam = (j.dates.find(([k]) => /exam|cbt/i.test(k)) || [])[1];
@@ -47,7 +47,7 @@ function buildPost(j) {
 
   return {
     title: j.total ? `${base}: ${j.total} Posts, Apply Online by ${lastTxt.replace(/ \d{4}$/, '')}` : `${base}: Apply Online by ${lastTxt.replace(/ \d{4}$/, '')}`,
-    slug: `${j.short} ${j.name}`,
+    slug: base,
     base,
     category: 'latest-jobs',
     organization: j.org,

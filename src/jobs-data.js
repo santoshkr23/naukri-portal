@@ -255,7 +255,7 @@ module.exports = [
     links: [['Apply online', 'https://examinationservices.nic.in/ExamSys27/root/home.aspx?enc=Ei4cajBkK1gZSfgr53ImFV%2FyIzhTZHBze3wooSg9DjjOvzupXmjixBOc0vZyJQ9v'], ['Information bulletin (PDF)', 'https://cdnbbsr.s3waas.gov.in/s301eee509ee2f68dc6014898c309e86bf/uploads/2026/10/202610081852912625.pdf'], ['UGC NET official website', 'https://ugcnet.nta.nic.in/']]
   },
   {
-    org: 'LIC Housing Finance Limited', short: 'LIC HFL', name: 'Apprentice Recruitment 2026', advt: 'Batch 10', total: '232',
+    org: 'LIC Housing Finance Limited', short: 'LIC Housing Finance', name: 'Apprentice Recruitment 2026', advt: 'Batch 10', total: '232',
     dates: [['Apply online starts', '20 October 2026'], ['Last date to apply', '01 November 2026'], ['Last date for fee payment', '01 November 2026'], ['Exam date', '07 November 2026']],
     last: '2026-11-01',
     fees: [['General / OBC / EWS (male)', '₹800'], ['General / OBC / EWS (female)', '₹600'], ['SC / ST / PwBD', '₹200'], ['Payment mode', 'Debit/credit card, net banking, UPI']],

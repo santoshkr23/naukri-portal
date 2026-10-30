@@ -124,6 +124,24 @@ router.post('/import-url', async (req, res) => {
   } catch (e) { res.redirect('/admin?msg=' + encodeURIComponent('Import failed: ' + e.message)); }
 });
 
+// ---------- Excel import ----------
+const multer = require('multer');
+const excel = require('../excel-import');
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
+router.get('/import', (req, res) => res.render('admin/import', { report: null, hasFile: excel.hasDefaultFile(), msg: req.query.msg }));
+router.get('/import/template.xlsx', (req, res) => excel.hasDefaultFile() ? res.download(excel.DEFAULT_FILE, 'posts-template.xlsx') : res.redirect('/admin/import'));
+router.post('/import', upload.single('file'), async (req, res) => {
+  try {
+    const src = req.file ? req.file.buffer : excel.hasDefaultFile() ? excel.DEFAULT_FILE : null;
+    if (!src) return res.render('admin/import', { report: null, hasFile: false, msg: 'Choose an .xlsx file first.' });
+    if (req.file && !/\.xlsx$/i.test(req.file.originalname)) return res.render('admin/import', { report: null, hasFile: excel.hasDefaultFile(), msg: 'Only .xlsx files can be imported.' });
+    const report = await excel.importWorkbook(src);
+    const fresh = db.prepare("SELECT slug FROM posts WHERE status='published' AND updated_at >= datetime('now','-2 minutes')").all().map(r => r.slug);
+    if (fresh.length) scraper.pingIndexNow(fresh).catch(() => {});
+    res.render('admin/import', { report, hasFile: excel.hasDefaultFile(), msg: null });
+  } catch (e) { res.render('admin/import', { report: null, hasFile: excel.hasDefaultFile(), msg: 'Import failed: ' + e.message }); }
+});
+
 // ---------- Settings & logs ----------
 router.get('/settings', (req, res) => res.render('admin/settings', { s: getSettings(), msg: req.query.msg }));
 router.post('/settings', (req, res) => {

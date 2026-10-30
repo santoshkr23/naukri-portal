@@ -7,7 +7,7 @@
     </div>
     <div>
       <strong>Sections</strong>
-      <% Object.entries(CATEGORIES).forEach(([k, c]) => { %><a href="/<%= k %>/"><%= c.name %></a><% }) %>
+      <% Object.entries(CATEGORIES).forEach(([k, c]) => { if (c.optional && !(navCats || []).includes(k)) return; %><a href="/<%= k %>/"><%= c.name %></a><% }) %>
     </div>
     <div>
       <strong>Site</strong>
