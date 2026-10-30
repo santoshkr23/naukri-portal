@@ -87,8 +87,27 @@
     <a href="https://t.me/share/url?url=<%= encodeURIComponent(meta.canonical) %>&text=<%= encodeURIComponent(post.title) %>" target="_blank" rel="noopener">Share on Telegram</a>
   </div>
 
+  <nav class="prevnext" aria-label="More in <%= cat.name %>">
+    <div><% if (prev) { %><span>Previous</span><a href="/<%= prev.slug %>/" rel="prev"><%= prev.title.split(/[:–]/)[0] %></a><% } %></div>
+    <a class="pn-home" href="/<%= post.category %>/">All <%= cat.name %></a>
+    <div class="pn-next"><% if (next) { %><span>Next</span><a href="/<%= next.slug %>/" rel="next"><%= next.title.split(/[:–]/)[0] %></a><% } %></div>
+  </nav>
+
   <% if (related.length) { %>
-  <section class="related"><h2>Related updates</h2><ul><% related.forEach(r => { %><li><a href="/<%= r.slug %>/"><%= r.title %></a></li><% }) %></ul></section>
+  <section class="related">
+    <h2>Related posts</h2>
+    <div class="rel-grid"><% related.slice(0, 6).forEach(r => { %><a href="/<%= r.slug %>/"><span class="badge c-<%= CATEGORIES[r.category]?.color %>"><%= CATEGORIES[r.category]?.short %></span><%= r.title.split(/[:–]/)[0] %></a><% }) %></div>
+  </section>
   <% } %>
 </article>
+
+<section class="wrap more-boxes" aria-label="Latest from every section">
+  <% sections.forEach(s => { const c = CATEGORIES[s.key]; %>
+    <div class="board mini c-<%= c.color %>">
+      <h2><a href="/<%= s.key %>/"><%= c.name %></a></h2>
+      <ul><% s.rows.forEach(r => { %><li><a href="/<%= r.slug %>/"><%= r.title.split(/[:–]/)[0] %></a></li><% }) %></ul>
+      <a class="more" href="/<%= s.key %>/">View more →</a>
+    </div>
+  <% }) %>
+</section>
 <%- include('partials/footer') %>

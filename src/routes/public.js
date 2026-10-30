@@ -81,8 +81,12 @@ router.get('/:slug/', (req, res, next) => {
   const post = getBySlug(slug);
   const preview = req.query.preview === '1' && require('../auth').isAuthed(req);
   if (!post || (post.status !== 'published' && !preview)) return next();
+  const near = (op, dir) => db.prepare(`SELECT slug,title FROM posts WHERE status='published' AND category=? AND id<>?
+    AND published_at ${op} ? ORDER BY published_at ${dir}, id ${dir} LIMIT 1`).get(post.category, post.id, post.published_at || '');
+  const sections = Object.keys(CATEGORIES).map(k => ({ key: k, rows: db.prepare(`SELECT slug,title FROM posts WHERE status='published'
+    AND category=? AND id<>? ORDER BY published_at DESC LIMIT 6`).all(k, post.id) })).filter(s => s.rows.length);
   res.render('post', {
-    post, related: related(post), fmtDate,
+    post, related: related(post), fmtDate, prev: near('<', 'DESC'), next: near('>', 'ASC'), sections,
     meta: { title: post.title, description: post.meta_description, canonical: `${b}/${post.slug}/`, image: `${b}/og/${post.slug}.png`,
       type: 'article', published: post.published_at, modified: post.updated_at, robots: post.status === 'published' ? null : 'noindex' },
     schema: postSchema(post, s, b)

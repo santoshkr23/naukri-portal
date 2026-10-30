@@ -146,5 +146,101 @@ module.exports = [
     eligibility: [['Food Safety Officer (Class 3)', 'M.Sc Chemistry, or graduate in Food Tech / Dairy Tech / Biotech / Oil Tech / Agriculture / Veterinary / Biochemistry / Microbiology / Medicine'], ['Also required', 'Basic computer knowledge + Gujarati and/or Hindi']],
     selection: ['MCQ exam (CBRT / OMR)', 'Document verification', 'Merit list'],
     links: [['Apply online (OJAS)', 'https://ojas.gujarat.gov.in/'], ['GSSSB official website', 'https://gsssb.gujarat.gov.in/']]
+  }  ,{
+    org: 'Bharat Heavy Electricals Limited (BHEL)', short: 'BHEL', name: 'Artisan Grade-IV Recruitment 2026', advt: '01/2026', total: '660',
+    dates: [['Apply online starts', '21 October 2026'], ['Last date to apply', '18 November 2026'], ['Exam date', '11 December 2026']],
+    last: '2026-11-18',
+    fees: [['General / OBC / EWS', '₹1,072 (incl. processing fee + GST)'], ['SC / ST / PwBD / Ex-Servicemen', '₹472']],
+    age: [['Maximum age', '27 years (as on 01 October 2026)'], ['Age relaxation', 'As per BHEL rules']],
+    salary: [['Pay', 'See official notification']],
+    vacancy: [['Fitter', '278'], ['Welder', '104'], ['Machinist', '101'], ['Electrician', '90'], ['Turner', '52'], ['Electronics Mechanic', '23'], ['Foundryman', '12']],
+    eligibility: [['All trades', '10th pass + ITI in the trade — 60% marks (Gen/OBC), 55% (SC/ST)']],
+    selection: ['Computer based test', 'Skill test / document verification as per notice'],
+    links: [['Official notification (PDF)', 'https://careers.bhel.in/ar_2027/Artisan_Detailed%20AD.pdf'], ['BHEL careers (official website)', 'https://careers.bhel.in/index.jsp']]
+  },
+  {
+    org: 'Railway Recruitment Board (RRB)', short: 'RRB', name: 'Station Master Recruitment 2026', advt: 'CEN 08/2026', total: '1265',
+    dates: [['Apply online starts', '27 October 2026'], ['Last date to apply', '25 November 2026'], ['Last date for fee payment', '27 November 2026'], ['Correction window', '28 November – 07 December 2026'], ['Exam date', 'To be announced']],
+    last: '2026-11-25',
+    fees: [['General / OBC / EWS', '₹500 (₹400 refunded after Stage I)'], ['SC / ST / PwBD / Female', '₹250 (refunded after Stage I)']],
+    age: [['Minimum age', '20 years'], ['Maximum age', '33 years (as on 01 July 2027)'], ['Age relaxation', 'As per Railway rules']],
+    salary: [['Pay', 'As per 7th CPC — see notification']],
+    vacancy: [['RRB Mumbai (CR)', '125'], ['RRB Jammu-Srinagar (NR)', '122'], ['RRB Chennai (SR)', '119'], ['RRB Thiruvananthapuram (SR)', '114'], ['RRB Prayagraj (NCR)', '104'], ['RRB Bengaluru (SWR)', '102'], ['RRB Secunderabad (SCoR)', '65'], ['RRB Bilaspur (SECR)', '52'], ['RRB Ajmer (NWR)', '49'], ['RRB Bhopal (WCR)', '49'], ['Other RRBs (see notification)', '364']],
+    eligibility: [['Station Master', 'Graduate in any stream']],
+    selection: ['CBT Stage I', 'CBT Stage II', 'Aptitude test', 'Document verification', 'Medical examination'],
+    links: [['Apply online', 'https://www.rrbapply.gov.in/'], ['RRB official website', 'https://rrb.indianrailways.gov.in/']]
+  },
+  {
+    org: 'UP Education Service Selection Commission (UPESSC)', short: 'UPESSC', name: 'UP TGT Teacher Recruitment 2026', advt: '07/2026', total: '17735',
+    dates: [['Apply online starts', '24 October 2026'], ['Last date to apply', '23 November 2026'], ['Correction last date', '26 November 2026'], ['Exam date', '23 – 24 December 2026']],
+    last: '2026-11-23',
+    fees: [['General / OBC / EWS', '₹1,000'], ['SC / ST', '₹500'], ['PwBD', '₹300']],
+    age: [['Minimum age', '21 years'], ['Maximum age', '62 years (as on 01 July 2026)']],
+    salary: [['Pay', 'As per UP government TGT pay scale']],
+    vacancy: [['Hindi', '2791'], ['English', '2517'], ['Science', '2493'], ['Social Science', '2482'], ['Mathematics', '2349'], ['Sanskrit', '1289'], ['Physical Education', '849'], ['Home Science', '798'], ['Drawing', '775'], ['Biology', '660'], ['Agriculture', '248'], ['Commerce', '134'], ['Other subjects (see notification)', '1350']],
+    eligibility: [['TGT (all subjects)', 'Graduate in the related subject + B.Ed; UP TET (Class 6–8) as per notification']],
+    selection: ['Written examination', 'Answer key and result', 'Document verification'],
+    links: [['UPESSC official website / apply', 'https://upessc.up.gov.in/']]
+  },
+  {
+    org: 'Uttar Pradesh Public Service Commission (UPPSC)', short: 'UPPSC', name: 'RO / ARO Recruitment 2026', advt: 'RO/ARO 2026', total: '501',
+    dates: [['Apply online starts', '26 October 2026'], ['Last date to apply', '26 November 2026'], ['Correction date', '03 December 2026'], ['Exam date', 'To be announced']],
+    last: '2026-11-26',
+    fees: [['General / OBC / EWS', '₹125'], ['SC / ST', '₹65'], ['PwBD', '₹25']],
+    age: [['Minimum age', '21 years'], ['Maximum age', '40 years (as on 01 July 2026)']],
+    salary: [['Pay', 'See official notification']],
+    vacancy: [['Assistant Review Officer, UP Secretariat', '261'], ['Review Officer, UP Secretariat', '122'], ['Assistant Review Officer, Advocate General Office', '45'], ['Review Officer (Accounts), UP Secretariat', '31'], ['Assistant Review Officer, UPPSC', '21'], ['Other RO / ARO posts', 'See notification (total 501)']],
+    eligibility: [['Review Officer', 'Graduate in any stream'], ['Review Officer (Accounts)', 'B.Com + DOEACC O Level'], ['Assistant Review Officer', 'Graduate + O Level + Hindi typing 25 wpm']],
+    selection: ['Prelims exam', 'Mains exam', 'Typing test (ARO)', 'Document verification'],
+    links: [['Apply online (UPPSC notifications)', 'https://uppsc.up.nic.in/CandidatePages/Notifications.aspx'], ['UPPSC official website', 'https://uppsc.up.nic.in/']]
+  },
+  {
+    org: 'Central Warehousing Corporation (CWC)', short: 'CWC', name: 'Assistant Manager & Junior Executive Recruitment 2026', advt: 'CWC/I-Manpower/DR/Rectt/2026/01', total: '327',
+    dates: [['Apply online starts', '17 October 2026'], ['Last date to apply', '15 November 2026'], ['Exam date', 'To be announced']],
+    last: '2026-11-15',
+    fees: [['General / OBC / EWS', '₹1,350'], ['SC / ST / PwBD / Female', '₹500']],
+    age: [['Minimum age', '18 years'], ['Maximum age', '28 years (as on 15 November 2026)']],
+    salary: [['Pay', 'See official notification']],
+    vacancy: [['Junior Executive (General)', '78'], ['Junior Executive (Technical)', '78'], ['Assistant Manager (General)', '70'], ['Assistant Manager (Technical)', '68'], ['Assistant Manager (Civil)', '22'], ['Assistant Manager (Finance)', '10'], ['Assistant Manager (Electrical)', '5'], ['Assistant Manager (Mechanical)', '4']],
+    eligibility: [['AM (General)', '2-year PG degree / PG diploma'], ['AM (Technical)', 'B.Tech in Agriculture / Food Tech / Biotech'], ['AM (Finance)', 'B.Com + 3 yrs experience, or CA/CMA Inter'], ['AM (Engineering)', 'B.E./B.Tech in Civil / Electrical / Mechanical'], ['JE (General)', 'Graduate + computer knowledge'], ['JE (Technical)', 'B.Sc in Agriculture / life sciences / Chemistry + computer knowledge']],
+    selection: ['Online exam', 'Document verification'],
+    links: [['Official notification (PDF)', 'https://cwceportal.com/Careers/Guidelines/45/45_Detailed%20Advertisement_7109fe46-7e18-4b68-84a5-8b6d6708e571.pdf'], ['CWC careers (official website)', 'https://cwceportal.com/careers']]
+  },
+  {
+    org: 'Supreme Court of India', short: 'Supreme Court', name: 'Court Master (Shorthand) Recruitment 2026', advt: 'SCI Court Master 2026', total: '20',
+    dates: [['Apply online starts', '25 October 2026'], ['Last date to apply', '15 November 2026'], ['Exam date', 'To be announced']],
+    last: '2026-11-15',
+    fees: [['General', '₹1,500'], ['OBC / SC / ST / PwBD', '₹750']],
+    age: [['Minimum age', '30 years'], ['Maximum age', '45 years (as on 01 October 2026)']],
+    salary: [['Pay', 'See official notification']],
+    vacancy: [['Court Master (Shorthand)', '20']],
+    eligibility: [['Court Master', 'Graduate + English shorthand 120 wpm + typing 40 wpm + 5 years experience']],
+    selection: ['Written / skill test', 'Interview as per notice'],
+    links: [['Official notification (PDF)', 'https://cdnbbsr.s3waas.gov.in/s3ec0490f1f4972d133619a60c30f3559e/uploads/2026/10/2026101664.pdf'], ['Supreme Court official website', 'https://www.sci.gov.in/']]
+  },
+  {
+    org: 'Indian Army', short: 'Indian Army', name: '10+2 Technical Entry Scheme (TES-57) 2026', advt: 'TES-57, July 2027 batch', total: '90',
+    dates: [['Apply online starts', '14 October 2026'], ['Last date to apply', '12 November 2026'], ['SSB interview', 'As per Army schedule']],
+    last: '2026-11-12',
+    fees: [['All candidates', 'No fee']],
+    age: [['Minimum age', '16 years 6 months'], ['Maximum age', '19 years 6 months (as on 01 July 2027)'], ['Date of birth', 'Between 02 Jan 2008 and 01 Jan 2011 (check notice)']],
+    salary: [['During training', 'Stipend as per Army rules; commissioned as Lieutenant after training']],
+    vacancy: [['TES-57 (men)', '90']],
+    eligibility: [['TES-57', '12th with PCM, minimum 60% aggregate + JEE Main 2026 appeared']],
+    selection: ['Shortlisting on JEE Main score', 'SSB interview', 'Medical examination', 'Merit list'],
+    links: [['Apply online', 'https://joinindianarmy.nic.in/Authentication.aspx'], ['Join Indian Army official website', 'https://joinindianarmy.nic.in/']]
+  },
+  {
+    org: 'Delhi Subordinate Services Selection Board (DSSSB)', short: 'DSSSB', name: 'Delhi District Courts Various Post Recruitment 2026', advt: '04/2026', total: '641',
+    dates: [['Apply online starts', '06 October 2026'], ['Last date to apply', '04 November 2026'], ['Exam date', 'To be announced']],
+    last: '2026-11-04',
+    fees: [['General / OBC / EWS', '₹100'], ['SC / ST / PwBD / Female', 'No fee']],
+    age: [['Minimum age', '18 years'], ['Maximum age', '27 years (as on 01 June 2026; varies by post)']],
+    salary: [['Pay', 'See official notification']],
+    vacancy: [['Personal Assistant (District Courts)', '189'], ['Junior Judicial Assistant (District Courts)', '151'], ['Peon / Orderly / Dak Peon (District Courts)', '139'], ['Process Server (District Courts)', '91'], ['Senior Personal Assistant (District Courts)', '27'], ['Junior Judicial Assistant (Family Courts)', '23'], ['Personal Assistant (Family Courts)', '17'], ['Peon / Orderly (Family Courts)', '3'], ['Process Server (Family Courts)', '1']],
+    eligibility: [['Senior PA / PA', 'Graduate + shorthand 110 wpm + typing 40 wpm'], ['Junior Judicial Assistant', 'Graduate + computer typing 40 wpm'], ['Process Server', '10th pass + LMV licence + 2 years driving'], ['Peon / Orderly / Dak Peon', '10th pass']],
+    selection: ['Written exam', 'Skill / typing test (where required)', 'Document verification'],
+    links: [['Apply online', 'https://dsssbonline.nic.in/'], ['DSSSB official website', 'https://dsssb.delhi.gov.in/']]
   }
 ];
+
