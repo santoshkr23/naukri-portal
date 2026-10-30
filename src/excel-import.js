@@ -112,7 +112,7 @@ function jobFromRow(row, col, today) {
   const min = t(/^min age/), max = t(/^max age/), note = t(/^age note/);
   if (min && !/^no\b/i.test(min)) age.push(['Minimum age', min]);
   if (max) age.push(['Maximum age', max]);
-  if (note) age.push(/^as on\b/i.test(note) ? ['Age as on', tidyDates(note.replace(/^as on\s*/i, ''))] : ['Note', tidyDates(note)]);
+  if (note) age.push(/^as on\b/i.test(note) ? ['Age as on', tidyDates(note.replace(/^as on\s*/i, ''))] : /^as per\b|relax/i.test(note) ? ['Age relaxation', note] : ['Note', tidyDates(note)]);
 
   const pay = t(/^pay|stipend/);
   const salary = !pay ? [] : /:\s/.test(pay) ? kv(pay) : [['Pay', pay]];
