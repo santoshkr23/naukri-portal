@@ -14,7 +14,12 @@ function homeSchema(settings, baseUrl) {
     '@graph': [
       { '@type': 'WebSite', name: settings.site_name, url: baseUrl + '/',
         potentialAction: { '@type': 'SearchAction', target: `${baseUrl}/search/?q={search_term_string}`, 'query-input': 'required name=search_term_string' } },
-      orgLd(settings, baseUrl)
+      orgLd(settings, baseUrl),
+      { '@type': 'FAQPage', mainEntity: [
+        [`Is ${settings.site_name} a government website?`, 'No. It is an independent information portal. Always apply and pay fees only on the official website linked in each post.'],
+        ['How often are updates added?', 'New notifications are checked every hour, and each post shows when it was published and last updated.'],
+        ['Which details should I verify before applying?', 'The last date, fee, age limit and qualification. These can change through a corrigendum, so open the official notification from the Important Links table.']
+      ].map(([q, a]) => ({ '@type': 'Question', name: q, acceptedAnswer: { '@type': 'Answer', text: a } })) }
     ]
   });
 }
