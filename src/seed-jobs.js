@@ -71,7 +71,7 @@ function seedJobs() {
     savePost(p);
     n++;
   }
-  return n;
+  return n + require('./seed-updates').seedUpdates();
 }
 
 if (require.main === module) { require('dotenv').config(); console.log(`Added ${seedJobs()} job posts`); }

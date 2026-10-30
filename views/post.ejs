@@ -33,7 +33,7 @@
 
   <% if (d.vacancy && d.vacancy.length) { %>
   <section class="box wide">
-    <h2>Vacancy Details<% if (post.total_posts) { %> — <%= post.total_posts %> Posts<% } %></h2>
+    <h2><% if (post.category === 'syllabus') { %>Exam Pattern<% } else { %>Vacancy Details<% if (post.total_posts) { %> — <%= post.total_posts %> Posts<% } %><% } %></h2>
     <div class="tscroll"><table>
       <thead><tr><% (d.vacancyHeader || ['Post Name','Total Posts']).forEach(h => { %><th><%= h %></th><% }) %></tr></thead>
       <tbody><% d.vacancy.forEach(r => { %><tr><% r.forEach(c => { %><td><%= c %></td><% }) %></tr><% }) %></tbody>
@@ -58,7 +58,7 @@
   <% }) %>
 
   <% if (d.selection && d.selection.length) { %>
-  <section class="box wide"><h2>Selection Process</h2><ol class="steps"><% d.selection.forEach(s => { %><li><%= s %></li><% }) %></ol></section>
+  <section class="box wide"><h2><%= post.category === 'latest-jobs' ? 'Selection Process' : 'Next Steps' %></h2><ol class="steps"><% d.selection.forEach(s => { %><li><%= s %></li><% }) %></ol></section>
   <% } %>
 
   <% if (d.howTo && d.howTo.length) { %>
