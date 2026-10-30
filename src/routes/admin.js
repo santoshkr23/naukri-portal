@@ -108,7 +108,7 @@ router.post('/sources/save', (req, res) => {
 router.post('/sources/:id/delete', (req, res) => { db.prepare('DELETE FROM sources WHERE id=?').run(+req.params.id); res.redirect('/admin/sources?msg=Source removed'); });
 router.post('/sources/:id/run', (req, res) => {
   const src = db.prepare('SELECT * FROM sources WHERE id=?').get(+req.params.id);
-  if (src) scraper.runSource(src).then(r => log('info', `Manual check of ${src.name}: ${r.imported} imported`)).catch(e => log('error', e.message));
+  if (src) scraper.runSource(src).then(r => log('info', `Manual check of ${src.name}: ${r.found} new links found, ${r.imported} imported${r.errors ? `, ${r.errors} errors` : ''}`)).catch(e => log('error', e.message));
   res.redirect('/admin/sources?msg=' + encodeURIComponent('Check started — see Logs in a minute'));
 });
 router.post('/run-all', (req, res) => {

@@ -63,6 +63,13 @@ async function runSource(src) {
     const markSeen = db.prepare('INSERT OR IGNORE INTO seen_urls(url,source_id,post_id) VALUES(?,?,?)');
     let fresh = links.filter(u => !isSeen.get(u));
     result.found = fresh.length;
+    if (!links.length) {
+      const host = new URL(src.list_url).hostname.replace(/^www\./, '');
+      const other = [...new Set((body.match(/href=["']https?:\/\/[^"'/]+/gi) || []).map(h => h.replace(/^href=["']https?:\/\//i, '').replace(/^www\./, '')))]
+        .filter(h => h !== host && h.split('.').slice(-2).join('.') === host.split('.').slice(-2).join('.'));
+      log('warn', `${src.name || src.list_url}: no post links found on this page.` +
+        (other.length ? ` Its posts seem to live on ${other.join(', ')} — use a listing page on that domain instead.` : ' Try the site\'s RSS feed (often /feed/) or set a "Link area" selector.'));
+    }
 
     if (!src.last_checked) { // first run: don't flood the site with old posts
       const keep = +settings.first_run_limit || 5;
