@@ -34,7 +34,7 @@ function postSchema(post, settings, baseUrl) {
   const graph = [
     breadcrumbs([{ name: 'Home', url: baseUrl + '/' }, { name: cat.name, url: `${baseUrl}/${post.category}/` }, { name: post.title, url }]),
     {
-      '@type': 'Article', headline: post.title.slice(0, 110), description: post.meta_description,
+      '@type': post.category === 'news' ? 'NewsArticle' : 'Article', ...(post.data?.lang ? { inLanguage: post.data.lang } : {}), headline: post.title.slice(0, 110), description: post.meta_description,
       image: `${baseUrl}/og/${post.slug}.png`, datePublished: toIso(post.published_at), dateModified: toIso(post.updated_at || post.published_at),
       mainEntityOfPage: url, author: orgLd(settings, baseUrl), publisher: orgLd(settings, baseUrl)
     }

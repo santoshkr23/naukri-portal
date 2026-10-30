@@ -68,7 +68,7 @@ function deletePosts(ids) {
   const remember = db.prepare('INSERT OR REPLACE INTO deleted_posts(fingerprint,title) VALUES(?,?)');
   const unlink = db.prepare('UPDATE seen_urls SET post_id=NULL WHERE post_id=?');
   const del = db.prepare('DELETE FROM posts WHERE id=?');
-  db.transaction(list => { for (const id of list) { const p = get.get(id); if (!p) continue; if (p.fingerprint) remember.run(p.fingerprint, p.title); unlink.run(id); del.run(id); } })(ids);
+  db.transaction(list => { for (const id of list) { const p = get.get(id); if (!p) continue; if (p.fingerprint) { remember.run(p.fingerprint, p.title); require('../news').deleteNewsFor(p.fingerprint); } unlink.run(id); del.run(id); } })(ids);
 }
 
 router.post('/posts/bulk', (req, res) => {
@@ -140,6 +140,10 @@ function formToPost(b) {
 router.post('/posts/save', (req, res) => {
   const p = formToPost(req.body);
   if (!p.title) return res.render('admin/post-form', { post: { ...blank, ...p, id: req.body.id || null }, rowsToText, msg: 'Title is required.' });
+  if (req.body.id) {
+    const old = getById(+req.body.id);
+    if (old) { const keep = { ...old.data }; delete keep.auto; p.data = { ...keep, ...p.data }; }
+  }
   const saved = savePost(p, req.body.id ? +req.body.id : null);
   if (saved.status === 'published') scraper.pingIndexNow([saved.slug]).catch(() => {});
   res.redirect(`/admin/posts/${saved.id}?msg=Saved`);
@@ -207,6 +211,8 @@ router.post('/import', upload.single('file'), async (req, res) => {
 // ---------- Settings & logs ----------
 router.get('/settings', (req, res) => res.render('admin/settings', { s: getSettings(), msg: req.query.msg }));
 router.post('/settings', (req, res) => {
+  setSetting('auto_news', req.body.auto_news === '1' ? '1' : '0');
+  if (req.body.auto_news === '1') require('../news').backfillNews();
   const keys = ['site_name', 'site_tagline', 'home_intro', 'max_per_run', 'first_run_limit', 'telegram_url', 'whatsapp_url', 'contact_email', 'google_verification', 'ga_id', 'adsense_client'];
   for (const k of keys) setSetting(k, String(req.body[k] ?? '').trim());
   setSetting('auto_publish', req.body.auto_publish === '1' ? '1' : '0');

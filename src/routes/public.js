@@ -43,10 +43,12 @@ router.get('/', (req, res) => {
   const Y = new Date().getFullYear(), homeYears = [Y, Y + 1];
   for (const c of Object.keys(CATEGORIES)) boxes[c] = listPosts({ category: c, limit: 25, years: homeYears }).rows;
   const hy = yearClause(homeYears);
-  const highlights = db.prepare(`SELECT slug,title,category FROM posts WHERE status='published' AND ${hy.sql} ORDER BY featured DESC, published_at DESC LIMIT 12`).all(...hy.args);
+  const news = db.prepare(`SELECT slug,title,data,published_at FROM posts WHERE status='published' AND category='news' ORDER BY published_at DESC, id DESC LIMIT 7`).all()
+    .map(n => { let k = ''; try { k = JSON.parse(n.data).keyword || ''; } catch {} return { ...n, keyword: k }; });
+  const highlights = db.prepare(`SELECT slug,title,category FROM posts WHERE status='published' AND category<>'news' AND ${hy.sql} ORDER BY featured DESC, published_at DESC LIMIT 12`).all(...hy.args);
   const s = res.locals.settings;
   res.render('home', {
-    boxes, highlights, fmtDate,
+    boxes, highlights, news, fmtDate, timeAgo,
     meta: { title: `${s.site_name} – ${s.site_tagline}`, description: s.home_intro, canonical: res.locals.baseUrl + '/' },
     schema: homeSchema(s, res.locals.baseUrl)
   });
@@ -91,6 +93,7 @@ router.get('/:slug/', (req, res, next) => {
 
 function renderPost(res, post) {
   const s = res.locals.settings, b = res.locals.baseUrl;
+  if (post.category === 'news') return renderNews(res, post);
   const near = (op, dir) => db.prepare(`SELECT slug,title FROM posts WHERE status='published' AND category=? AND id<>?
     AND published_at ${op} ? ORDER BY published_at ${dir}, id ${dir} LIMIT 1`).get(post.category, post.id, post.published_at || '');
   const sections = Object.keys(CATEGORIES).map(k => ({ key: k, rows: db.prepare(`SELECT slug,title FROM posts WHERE status='published'
@@ -101,6 +104,33 @@ function renderPost(res, post) {
       type: 'article', published: post.published_at, modified: post.updated_at, robots: post.status === 'published' ? null : 'noindex' },
     schema: postSchema(post, s, b)
   });
+}
+
+function renderNews(res, post) {
+  const s = res.locals.settings, b = res.locals.baseUrl;
+  const more = db.prepare(`SELECT slug,title,published_at FROM posts WHERE status='published' AND category='news' AND id<>? ORDER BY published_at DESC, id DESC LIMIT 8`).all(post.id);
+  const related = post.data.relatedSlug ? db.prepare("SELECT slug,title,category FROM posts WHERE slug=? AND status='published'").get(post.data.relatedSlug) : null;
+  res.render('news', {
+    post, more, related, fmtDate, timeAgo, fmtTime,
+    meta: { title: post.title, description: post.meta_description, canonical: `${b}/${post.slug}/`, image: `${b}/og/${post.slug}.png`, lang: post.data.lang || 'hi',
+      type: 'article', published: post.published_at, modified: post.updated_at, robots: post.status === 'published' ? null : 'noindex' },
+    schema: postSchema(post, s, b)
+  });
+}
+
+// "5 मिनट पहले" style times for news
+function timeAgo(sql) {
+  if (!sql) return '';
+  const t = new Date(sql.replace(' ', 'T') + 'Z'), m = Math.round((Date.now() - t) / 60000);
+  if (m < 1) return 'अभी'; if (m < 60) return `${m} मिनट पहले`;
+  const h = Math.round(m / 60); if (h < 24) return `${h} घंटे पहले`;
+  const d = Math.round(h / 24); if (d < 7) return `${d} दिन पहले`;
+  return fmtDate(sql);
+}
+function fmtTime(sql) {
+  if (!sql) return '';
+  const t = new Date(sql.replace(' ', 'T') + 'Z');
+  return t.toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'Asia/Kolkata' }) + ' IST';
 }
 
 router.renderPost = renderPost;

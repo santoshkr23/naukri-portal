@@ -15,6 +15,8 @@
     </div>
   </section>
   <section class="card">
+    <h2>News</h2>
+    <label class="check"><input type="checkbox" name="auto_news" value="1" <%= s.auto_news !== '0' ? 'checked' : '' %>> Write a Hindi news story automatically for every published update (shown in the News section and on the home page). Stories you edit by hand are never overwritten.</label>
     <h2>Auto-import</h2>
     <label class="check"><input type="checkbox" name="auto_publish" value="1" <%= s.auto_publish === '1' ? 'checked' : '' %>> Publish imported posts automatically (posts with too little detail always stay as drafts)</label>
     <div class="grid2">

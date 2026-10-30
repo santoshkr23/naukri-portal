@@ -21,8 +21,21 @@
 </section>
 <% } %>
 
+<% if (news.length) { const [lead, ...rest] = news; %>
+<section class="wrap home-news" aria-label="Latest news">
+  <div class="hn-head"><h2>ताज़ा खबरें <span>Latest News</span></h2><a href="/news/">सभी खबरें →</a></div>
+  <div class="hn-grid">
+    <a class="hn-lead" href="/<%= lead.slug %>/">
+      <img src="/og/<%= lead.slug %>.png" alt="<%= lead.keyword %>" width="1200" height="630" loading="lazy">
+      <strong><%= lead.title %></strong><time><%= timeAgo(lead.published_at) %></time>
+    </a>
+    <ul class="hn-list"><% rest.forEach(n => { %><li><a href="/<%= n.slug %>/"><img src="/og/<%= n.slug %>.png" alt="" width="120" height="63" loading="lazy"><span><%= n.title %><time><%= timeAgo(n.published_at) %></time></span></a></li><% }) %></ul>
+  </div>
+</section>
+<% } %>
+
 <section class="wrap boards">
-  <% Object.entries(CATEGORIES).forEach(([k, c]) => { if (c.optional && !boxes[k].length) return; %>
+  <% Object.entries(CATEGORIES).forEach(([k, c]) => { if (k === 'news' || (c.optional && !boxes[k].length)) return; %>
     <div class="board c-<%= c.color %>">
       <h2><a href="/<%= k %>/"><%= c.name %></a></h2>
       <% if (boxes[k].length) { %>

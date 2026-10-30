@@ -1,0 +1,60 @@
+<%- include('partials/head') %>
+<%- include('partials/header') %>
+<% const d = post.data || {}; %>
+<article class="wrap news-layout">
+  <div class="news-main post">
+    <nav class="crumbs"><a href="/">होम</a> › <a href="/news/">न्यूज़</a> › <span><%= d.keyword || 'खबर' %></span></nav>
+    <% if (post.status !== 'published') { %><div class="draft-note">Preview — this news is a draft and is not public.</div><% } %>
+    <span class="news-kicker">शिक्षा / सरकारी नौकरी</span>
+    <h1 class="news-h1"><%= post.title %></h1>
+    <p class="news-deck"><%= String(d.intro || '').split(/\n\s*\n/)[0] %></p>
+    <div class="news-byline">
+      <span><strong><%= settings.site_name %> डेस्क</strong></span>
+      <time datetime="<%= (post.published_at || '').replace(' ', 'T') %>Z">प्रकाशित: <%= fmtTime(post.published_at) %></time>
+      <% if (post.updated_at && post.updated_at > post.published_at) { %><span>अपडेट: <%= fmtTime(post.updated_at) %></span><% } %>
+    </div>
+
+    <figure class="news-figure"><img src="/og/<%= post.slug %>.png" alt="<%= d.keyword || post.title %>" width="1200" height="630" loading="eager"></figure>
+
+    <% (d.extra || []).forEach(x => { %>
+    <aside class="news-points"><h2><%= x.heading %></h2><ul><% x.items.forEach(i => { %><li><%= i %></li><% }) %></ul></aside>
+    <% }) %>
+
+    <div class="news-body">
+      <% String(d.intro || '').split(/\n\s*\n/).slice(1).forEach(p => { %><p><%= p %></p><% }) %>
+    </div>
+
+    <% if (settings.adsense_client) { %><div class="ad-slot"><ins class="adsbygoogle" style="display:block" data-ad-client="<%= settings.adsense_client %>" data-ad-format="auto" data-full-width-responsive="true"></ins><script>(adsbygoogle=window.adsbygoogle||[]).push({});</script></div><% } %>
+
+    <% if (d.dates && d.dates.length) { %>
+    <section class="box wide"><h2>महत्वपूर्ण तिथियां</h2><dl><% d.dates.forEach(([k, v]) => { %><div><dt><%= k %></dt><dd><%= v %></dd></div><% }) %></dl></section>
+    <% } %>
+
+    <% if (d.howTo && d.howTo.length) { %>
+    <section class="news-steps"><h2><%= d.howToHeading || 'ऐसे करें प्रक्रिया पूरी' %></h2><ol><% d.howTo.forEach(s => { %><li><%= s %></li><% }) %></ol></section>
+    <% } %>
+
+    <% if (d.links && d.links.length) { %>
+    <section class="box wide links"><h2>आधिकारिक लिंक</h2><table><tbody>
+      <% d.links.forEach(([label, url]) => { %><tr><td><%= label %></td><td><a href="<%= url %>" target="_blank" rel="nofollow noopener">यहां क्लिक करें ↗</a></td></tr><% }) %>
+    </tbody></table></section>
+    <% } %>
+
+    <% if (related) { %>
+    <a class="news-full" href="/<%= related.slug %>/"><span>पूरी जानकारी: तिथियां, शुल्क, योग्यता और लिंक</span><strong><%= related.title.split(/[:–]/)[0] %> →</strong></a>
+    <% } %>
+
+    <div class="share">
+      <a href="https://api.whatsapp.com/send?text=<%= encodeURIComponent(post.title + ' ' + meta.canonical) %>" target="_blank" rel="noopener">WhatsApp पर शेयर करें</a>
+      <a href="https://t.me/share/url?url=<%= encodeURIComponent(meta.canonical) %>&text=<%= encodeURIComponent(post.title) %>" target="_blank" rel="noopener">Telegram पर शेयर करें</a>
+    </div>
+    <p class="news-note">नोट: यह खबर आधिकारिक सूचना के आधार पर तैयार की गई है। किसी भी बदलाव के लिए आधिकारिक वेबसाइट की जानकारी ही मान्य है।</p>
+  </div>
+
+  <aside class="news-side">
+    <h2>ताज़ा खबरें</h2>
+    <ul><% more.forEach(n => { %><li><a href="/<%= n.slug %>/"><%= n.title %></a><time><%= timeAgo(n.published_at) %></time></li><% }) %></ul>
+    <a class="more" href="/news/">सभी खबरें →</a>
+  </aside>
+</article>
+<%- include('partials/footer') %>

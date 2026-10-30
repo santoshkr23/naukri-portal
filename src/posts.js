@@ -48,7 +48,7 @@ function savePost(p, id) {
       total_posts=@total_posts,meta_description=@meta_description,data=@data,status=@status,last_date=@last_date,featured=@featured,
       published_at=@published_at,updated_at=@updated_at WHERE id=@id`).run({ ...row, slug, published_at, updated_at: now, id });
     clearOg(old.slug); clearOg(slug);
-    return getById(id);
+    return afterSave(getById(id));
   }
   const slug = uniqueSlug(db, p.slug || p.title);
   const info = db.prepare(`INSERT INTO posts(slug,title,category,organization,short_info,total_posts,meta_description,data,status,
@@ -58,7 +58,16 @@ function savePost(p, id) {
     ...row, slug, fingerprint: p.fingerprint || fingerprint(p.base || p.title, p.category),
     published_at: row.status === 'published' ? now : null, updated_at: now
   });
-  return getById(info.lastInsertRowid);
+  return afterSave(getById(info.lastInsertRowid));
+}
+
+// Every published update gets a news story (src/news.js); unpublishing it takes the story down too
+function afterSave(post) {
+  if (post && post.category !== 'news') {
+    const news = require('./news');
+    try { if (post.status === 'published') news.ensureNewsFor(post); else news.syncNewsStatus(post); } catch (e) { console.error('news:', e.message); }
+  }
+  return post;
 }
 
 module.exports = { yearClause, listPosts, getBySlug, getById, related, savePost, clearOg };

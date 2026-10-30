@@ -45,8 +45,12 @@ if (require.main === module) {
   // content/posts.xlsx (your Excel sheet) is the source of posts when present; otherwise the starter set in jobs-data.js is used
   const xl = require('./excel-import');
   if (xl.hasDefaultFile() && process.env.IMPORT_EXCEL !== '0') {
-    xl.importWorkbook().then(r => console.log(`Excel: ${r.created.length} new, ${r.updated.length} updated, ${r.drafts.length} drafts`)).catch(e => console.error('Excel import failed:', e.message));
-  } else if (process.env.SEED_JOBS !== '0') { const n = require('./seed-jobs').seedJobs(); if (n) console.log(`Added ${n} starter job posts`); }
+    xl.importWorkbook().then(r => console.log(`Excel: ${r.created.length} new, ${r.updated.length} updated, ${r.drafts.length} drafts`)).catch(e => console.error('Excel import failed:', e.message))
+      .finally(() => { const n = require('./news').backfillNews(); if (n) console.log(`News: wrote ${n} stories`); });
+  } else {
+    if (process.env.SEED_JOBS !== '0') { const n = require('./seed-jobs').seedJobs(); if (n) console.log(`Added ${n} starter job posts`); }
+    const n = require('./news').backfillNews(); if (n) console.log(`News: wrote ${n} stories`);
+  }
   if (process.env.SEED_DEMO === '1') { const n = require('./seed').seed(); if (n) console.log(`Seeded ${n} sample posts`); }
   app.listen(port, () => console.log(`Site running on http://localhost:${port}  (admin: /admin)`));
   require('./scraper').startScheduler();

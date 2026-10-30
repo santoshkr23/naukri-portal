@@ -71,6 +71,7 @@ const DEFAULT_SETTINGS = {
   site_tagline: 'Latest Govt Jobs, Admit Card, Result & Answer Key',
   home_intro: 'Fresh government job notifications, admit cards, results and answer keys — checked against official sources and updated every hour.',
   auto_publish: '1',
+  auto_news: '1',
   max_per_run: '10',
   first_run_limit: '5',
   telegram_url: '',
@@ -98,6 +99,7 @@ function log(level, message) {
 }
 
 const CATEGORIES = {
+  'news': { name: 'News', short: 'News', color: 'rose' },
   'latest-jobs': { name: 'Latest Jobs', short: 'Jobs', color: 'teal' },
   'admit-card': { name: 'Admit Card', short: 'Admit Card', color: 'indigo' },
   'result': { name: 'Result', short: 'Result', color: 'green' },
