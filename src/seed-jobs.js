@@ -18,7 +18,7 @@ function buildPost(j) {
   const officialHost = (() => { try { return new URL((j.links.find(([l]) => /official website/i.test(l)) || j.links[0])[1]).hostname; } catch { return ''; } })();
 
   const intro = [
-    `${j.org} has opened recruitment for ${j.total} posts under advertisement ${j.advt}. ${start ? `Online applications open on ${start} and` : 'Applications'} close on ${lastTxt}.`,
+    `${j.org} has opened ${j.total ? `recruitment for ${j.total} posts` : `applications for ${j.name.replace(/ Online Form.*$/i, '')}`}${j.advt ? ` under advertisement ${j.advt}` : ''}. ${start ? `Online applications open on ${start} and` : 'Applications'} close on ${lastTxt}.`,
     [
       minAge && /^\d/.test(maxAge || '') ? `Age limit: ${minAge} to ${maxAge}.` : /^\d/.test(maxAge || '') ? `Upper age limit: ${maxAge}.` : minAge ? `Minimum age: ${minAge} (upper limit varies by post).` : '',
       `Key qualification (${j.eligibility[0][0]}): ${String(j.eligibility[0][1]).replace(/\.$/, '')}.`,
@@ -38,7 +38,7 @@ function buildPost(j) {
 
   const faqs = [
     [`What is the last date to apply for ${base}?`, `Applications close on ${lastTxt}.`],
-    [`How many vacancies are there?`, `There are ${j.total} posts in total. See the vacancy table for the break-up.`],
+    ...(j.total ? [[`How many vacancies are there?`, `There are ${j.total} posts in total. See the vacancy table for the break-up.`]] : []),
     ...(maxAge ? [[`What is the age limit?`, `${minAge ? `Minimum ${minAge}, maximum ${maxAge}` : `Maximum ${maxAge}`}, with relaxation for reserved categories as per rules.`]] : []),
     ...(firstFee ? [[`How much is the application fee?`, j.fees.map(([k, v]) => `${k}: ${v}`).join('; ') + '.']] : []),
     [`What is the selection process?`, `${j.selection.join(', ')}.`],
@@ -46,7 +46,7 @@ function buildPost(j) {
   ];
 
   return {
-    title: `${base}: ${j.total} Posts, Apply Online by ${lastTxt.replace(/ \d{4}$/, '')}`,
+    title: j.total ? `${base}: ${j.total} Posts, Apply Online by ${lastTxt.replace(/ \d{4}$/, '')}` : `${base}: Apply Online by ${lastTxt.replace(/ \d{4}$/, '')}`,
     slug: `${j.short} ${j.name}`,
     base,
     category: 'latest-jobs',
@@ -55,9 +55,9 @@ function buildPost(j) {
     last_date: j.last,
     status: 'published',
     featured: true,
-    meta_description: `${base}: ${j.total} posts, last date ${lastTxt}${maxAge ? `, max age ${maxAge}` : ''}. Check dates, fee, eligibility, vacancy and official apply link.`.slice(0, 158),
+    meta_description: `${base}: ${j.total ? `${j.total} posts, ` : ''}last date ${lastTxt}${maxAge ? `, max age ${maxAge}` : ''}. Check dates, fee, eligibility, vacancy and official apply link.`.slice(0, 158),
     short_info: intro.slice(0, 280),
-    data: { intro, advt: j.advt, dates: j.dates, fees: j.fees, age: j.age, salary: j.salary, vacancyHeader: ['Post / Category', 'Vacancies'], vacancy: j.vacancy, eligibility: j.eligibility, selection: j.selection, howTo, links: j.links, faqs, extra: [] }
+    data: { intro, advt: j.advt, dates: j.dates, fees: j.fees, age: j.age, salary: j.salary, vacancyHeader: ['Post / Category', 'Vacancies'], vacancy: j.vacancy, eligibility: j.eligibility, selection: j.selection, howTo, links: j.links, faqs, extra: j.extra || [] }
   };
 }
 

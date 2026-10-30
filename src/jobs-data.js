@@ -1,4 +1,4 @@
-// Starter set of real, currently-open recruitments (facts as of 30 Oct 2026).
+// Starter set of real, currently-open recruitments (facts as of 30 Oct 2026, from Govt_Job_Posts.xlsx).
 // Only facts are stored here: dates, fees, age, vacancies, eligibility, pay, selection stages and OFFICIAL links.
 // All descriptive text on the site is generated in this site's own words (see seed-jobs.js).
 // Always re-check against the official notification — dates can change.
@@ -241,6 +241,117 @@ module.exports = [
     eligibility: [['Senior PA / PA', 'Graduate + shorthand 110 wpm + typing 40 wpm'], ['Junior Judicial Assistant', 'Graduate + computer typing 40 wpm'], ['Process Server', '10th pass + LMV licence + 2 years driving'], ['Peon / Orderly / Dak Peon', '10th pass']],
     selection: ['Written exam', 'Skill / typing test (where required)', 'Document verification'],
     links: [['Apply online', 'https://dsssbonline.nic.in/'], ['DSSSB official website', 'https://dsssb.delhi.gov.in/']]
+  },
+  {
+    org: 'National Testing Agency (NTA)', short: 'NTA', name: 'UGC NET December 2026 Online Form', advt: '', total: '',
+    dates: [['Apply online starts', '08 October 2026'], ['Last date to apply', '31 October 2026 (with ₹500 late fee; normal last date 28 October)'], ['Exam date', '14 – 19 December 2026']],
+    last: '2026-10-31',
+    fees: [['General', '₹1,150'], ['EWS / OBC', '₹600'], ['SC / ST / PwBD', '₹325'], ['Late fee', '₹500'], ['Payment mode', 'Debit/credit card, net banking, UPI']],
+    age: [['Maximum age', '30 years for JRF; no limit for Assistant Professor / PhD'], ['Age as on', '01 December 2026']],
+    salary: [['Fellowship / pay', 'See official information bulletin']],
+    vacancy: [['JRF / Assistant Professor / PhD admission', 'Eligibility test (no fixed vacancies)']],
+    eligibility: [['JRF / Assistant Professor / PhD admission', "Master's degree with 55% marks (50% for reserved categories)"]],
+    selection: ['Computer based test (Paper 1 + Paper 2)', 'Result and e-certificate'],
+    links: [['Apply online', 'https://examinationservices.nic.in/ExamSys27/root/home.aspx?enc=Ei4cajBkK1gZSfgr53ImFV%2FyIzhTZHBze3wooSg9DjjOvzupXmjixBOc0vZyJQ9v'], ['Information bulletin (PDF)', 'https://cdnbbsr.s3waas.gov.in/s301eee509ee2f68dc6014898c309e86bf/uploads/2026/10/202610081852912625.pdf'], ['UGC NET official website', 'https://ugcnet.nta.nic.in/']]
+  },
+  {
+    org: 'LIC Housing Finance Limited', short: 'LIC HFL', name: 'Apprentice Recruitment 2026', advt: 'Batch 10', total: '232',
+    dates: [['Apply online starts', '20 October 2026'], ['Last date to apply', '01 November 2026'], ['Last date for fee payment', '01 November 2026'], ['Exam date', '07 November 2026']],
+    last: '2026-11-01',
+    fees: [['General / OBC / EWS (male)', '₹800'], ['General / OBC / EWS (female)', '₹600'], ['SC / ST / PwBD', '₹200'], ['Payment mode', 'Debit/credit card, net banking, UPI']],
+    age: [['Minimum age', '20 years'], ['Maximum age', '25 years'], ['Age as on', '01 October 2026']],
+    salary: [['Stipend', 'See official notification']],
+    vacancy: [['Apprentice', '232']],
+    eligibility: [['Apprentice', 'Graduate in any stream']],
+    selection: ['Online exam', 'Document verification'],
+    links: [['Register on NATS', 'https://nats.education.gov.in/student_type.php'], ['Notification (PDF)', 'https://cdn.lichousing.com/2026/10/Apprentecis-Advertisement-Notification-Batch-10.pdf'], ['LIC HFL careers (official website)', 'https://www.lichousing.com/careers']]
+  },
+  {
+    org: 'Bihar Public Service Commission (BPSC)', short: 'BPSC', name: 'School Teacher TRE 4.0 Recruitment 2026', advt: '15/2026', total: '33320',
+    dates: [['Apply online starts', '25 September 2026'], ['Last date to apply', '02 November 2026'], ['Last date for fee payment', '02 November 2026'], ['Exam date', 'To be announced']],
+    last: '2026-11-02',
+    fees: [['All categories', '₹100'], ['Payment mode', 'Online']],
+    age: [['Minimum age', '18 years (21 for TGT/PGT)'], ['Maximum age', '37 years (men), 40 years (women)'], ['Age relaxation', 'As per Bihar rules']],
+    salary: [['Pay', 'See official notification']],
+    vacancy: [['Primary teacher (Class 1–5)', '3847'], ['Middle school teacher (Class 6–8)', '8563'], ['Secondary teacher (Class 9–10)', '4370'], ['Senior secondary teacher (Class 11–12)', '16540']],
+    eligibility: [['Primary teacher (Class 1–5)', '12th + D.El.Ed/B.El.Ed + STET/CTET Paper I'], ['Middle school teacher (Class 6–8)', 'Graduate + D.El.Ed/B.Ed + CTET/STET Paper II'], ['Secondary teacher (Class 9–10)', 'Graduate/PG in subject + B.Ed + STET'], ['Senior secondary teacher (Class 11–12)', 'PG in subject + B.Ed + STET']],
+    selection: ['Written examination', 'Document verification'],
+    extra: [{ heading: 'Category-wise vacancy', items: ['See the district-wise vacancy PDFs on the BPSC website'] }],
+    links: [['Apply online (OTR login)', 'https://bpsconline.bihar.gov.in/candidate/login'], ['Detailed advertisement (PDF)', 'https://bpsc.bihar.gov.in/wp-content/uploads/BPSC_content/Notices/Advertisement-152026-TRE-4.0_BPSC-20260922-dbsf04.pdf'], ['BPSC official website', 'https://bpsc.bihar.gov.in/']]
+  },
+  {
+    org: 'UP Education Service Selection Commission (UPESSC)', short: 'UPESSC', name: 'UP Assistant Teacher (Primary) Recruitment 2026', advt: '05/2026', total: '12405',
+    dates: [['Apply online starts', '16 September 2026'], ['Last date to apply (extended)', '04 November 2026'], ['Last date for fee payment', '04 November 2026'], ['Exam date', '03 – 04 December 2026']],
+    last: '2026-11-04',
+    fees: [['General / OBC / EWS', '₹1,000'], ['SC / ST', '₹500'], ['PwBD', '₹300'], ['Payment mode', 'Debit/credit card, net banking, UPI']],
+    age: [['Minimum age', '21 years'], ['Maximum age', '40 years'], ['Age as on', '01 July 2026']],
+    salary: [['Pay', 'See official notification']],
+    vacancy: [['Assistant Teacher – urban primary schools', '11508'], ['Assistant Teacher – aided primary schools', '897']],
+    eligibility: [['Assistant Teacher – urban primary schools', 'Graduate + D.El.Ed/BTC or B.El.Ed'], ['Assistant Teacher – aided primary schools', 'Graduate + D.El.Ed/BTC or B.El.Ed + Primary TET']],
+    selection: ['Written examination', 'Document verification'],
+    extra: [{ heading: 'Category-wise vacancy', items: ['Urban schools: UR 4746 · OBC 3069 · EWS 1116 · SC 2379 · ST 198', 'Aided schools: UR 378 · OBC 164 · EWS 7 · SC 348'] }],
+    links: [['Registration', 'https://apply.upessc.org/register'], ['Date-extension notice (PDF)', 'https://upessc.up.gov.in/Notice/4b1f-907a-4508-5c3a-0c65.pdf'], ['UPESSC official website', 'https://upessc.up.gov.in/']]
+  },
+  {
+    org: 'Dr. Ram Manohar Lohia Institute of Medical Sciences, Lucknow', short: 'Dr RMLIMS', name: 'Lucknow Non-Teaching Group B & C Recruitment 2026', advt: '78-83/Estb.-2/Rectt./Dr.RMLIMS/2026', total: '74',
+    dates: [['Apply online starts', '19 October 2026'], ['Last date to apply', '20 November 2026'], ['Last date for fee payment', '20 November 2026'], ['Exam date', 'To be announced']],
+    last: '2026-11-20',
+    fees: [['General / OBC / EWS', '₹1,180 (incl. GST)'], ['SC / ST', '₹708 (incl. GST)'], ['PwBD', 'No fee'], ['Payment mode', 'Online']],
+    age: [['Minimum age', '18 years'], ['Maximum age', '40 years']],
+    salary: [['Pay', 'See official notification']],
+    vacancy: [['Hospital Attendant Gr-II', '32'], ['Stenographer', '30'], ['Receptionist', '8'], ['Programmer', '2'], ['Medical Physicist', '1'], ['Radiation Safety Officer', '1']],
+    eligibility: [['Hospital Attendant Gr-II', '10th pass'], ['Stenographer', 'Graduate with 55% + shorthand & typing test'], ['Receptionist', 'Graduate + PG diploma in journalism / PR'], ['Programmer', 'B.E./B.Tech CS or MCA'], ['Medical Physicist', 'M.Sc Physics / radiological physics + internship'], ['Radiation Safety Officer', 'See notification']],
+    selection: ['Written examination', 'Skill test (where required)', 'Document verification'],
+    extra: [{ heading: 'Category-wise vacancy', items: ['UR 32 · OBC 19 · EWS 7 · SC 15 · ST 1'] }],
+    links: [['Dr RMLIMS recruitment page (official website)', 'https://www.drrmlims.ac.in/recruitment'], ['Application notice (PDF)', 'https://www.drrmlims.ac.in/Assets/pages/recruitment/Notice_807_Online_application_window_Advt_78_83_2026.pdf']]
+  },
+  {
+    org: 'UP Education Service Selection Commission (UPESSC)', short: 'UPESSC', name: 'UP Headmaster Recruitment 2026', advt: '09/2026', total: '1172',
+    dates: [['Apply online starts', '23 October 2026'], ['Last date to apply', '22 November 2026'], ['Last date for fee payment', '22 November 2026'], ['Exam date', '07 January 2027']],
+    last: '2026-11-22',
+    fees: [['All categories', '₹1,500'], ['Payment mode', 'Debit/credit card, net banking, UPI']],
+    age: [['Minimum age', '30 years'], ['Maximum age', '62 years'], ['Age as on', '01 July 2026']],
+    salary: [['Pay', 'See official notification']],
+    vacancy: [["Headmaster (boys' schools)", '1037'], ["Headmaster (girls' schools)", '135']],
+    eligibility: [["Headmaster (boys' schools)", "Master's with 50% + B.Ed/B.P.Ed + 4 years teaching"], ["Headmaster (girls' schools)", 'Same as above (see notification)']],
+    selection: ['Written examination', 'Document verification'],
+    links: [['Apply online', 'https://apply.upessc.org/'], ['UPESSC official website', 'https://upessc.up.gov.in/']]
+  },
+  {
+    org: 'UP Education Service Selection Commission (UPESSC)', short: 'UPESSC', name: 'UP Principal (Inter College) Recruitment 2026', advt: '08/2026', total: '1475',
+    dates: [['Apply online starts', '23 October 2026'], ['Last date to apply', '22 November 2026'], ['Last date for fee payment', '22 November 2026'], ['Exam date', '07 January 2027']],
+    last: '2026-11-22',
+    fees: [['All categories', '₹2,000'], ['Payment mode', 'Debit/credit card, net banking, UPI']],
+    age: [['Minimum age', '30 years'], ['Maximum age', '62 years'], ['Age as on', '01 July 2026']],
+    salary: [['Pay', 'See official notification']],
+    vacancy: [["Principal (boys' inter colleges)", '1318'], ["Principal (girls' inter colleges)", '157']],
+    eligibility: [["Principal (boys' inter colleges)", "Master's with 50% + B.Ed + 4 years experience"], ["Principal (girls' inter colleges)", 'See notification']],
+    selection: ['Written examination', 'Document verification'],
+    links: [['Apply online', 'https://apply.upessc.org/'], ['UPESSC official website', 'https://upessc.up.gov.in/']]
+  },
+  {
+    org: 'Supreme Court of India', short: 'Supreme Court', name: 'Junior Court Attendant Recruitment 2026', advt: '', total: '130',
+    dates: [['Notification released', '15 October 2026'], ['Apply online starts', '04 November 2026'], ['Last date to apply', '25 November 2026'], ['Last date for fee payment', '25 November 2026'], ['Exam date', 'To be announced']],
+    last: '2026-11-25',
+    fees: [['General', '₹1,500'], ['OBC / SC / ST / PwBD', '₹750'], ['Payment mode', 'Online only']],
+    age: [['Minimum age', '18 years'], ['Maximum age', '27 years'], ['Age as on', '01 October 2026']],
+    salary: [['Pay', 'See official notification']],
+    vacancy: [['Junior Court Attendant (Group C)', '130']],
+    eligibility: [['Junior Court Attendant (Group C)', '10th pass']],
+    selection: ['Written examination', 'Further stages as per official notification'],
+    links: [['Notification (PDF)', 'https://cdnbbsr.s3waas.gov.in/s3ec0490f1f4972d133619a60c30f3559e/uploads/2026/10/2026101560.pdf'], ['Supreme Court official website', 'https://www.sci.gov.in/']]
+  },
+  {
+    org: 'UP Subordinate Services Selection Commission (UPSSSC)', short: 'UPSSSC', name: 'Lower Subordinate (Inter Level) Mains Recruitment 2026', advt: '26-Exam/2026', total: '1784',
+    dates: [['Notification released', '16 October 2026'], ['Apply online starts', '10 November 2026'], ['Last date to apply', '01 December 2026'], ['Last date for fee payment', '01 December 2026'], ['Exam date', 'To be announced']],
+    last: '2026-12-01',
+    fees: [['All categories', '₹25'], ['Payment mode', 'Debit/credit card, net banking, UPI']],
+    age: [['Minimum age', '18 years'], ['Maximum age', '40 years'], ['Age relaxation', 'As per UP government rules']],
+    salary: [['Pay', 'See official notification']],
+    vacancy: [['Village Development Officer (Social Welfare)', '525'], ['Village Development Officer', '508'], ['Commercial Tax Collection Amin', '235'], ['Land Amin', '187'], ['Social Welfare Supervisor', '137'], ['Storekeeper & Clerk', '118'], ['Cooperative Agriculture Supervisor', '50'], ['Tabulator', '14'], ['House Mother', '5'], ['Other posts', '5']],
+    eligibility: [['All posts', '12th pass + valid UPSSSC PET score']],
+    selection: ['Mains written examination', 'Document verification'],
+    extra: [{ heading: 'Category-wise vacancy', items: ['UR 840 · OBC 448 · EWS 144 · SC 326 · ST 26'] }],
+    links: [['Notifications / apply', 'https://upsssc.gov.in/AllNotifications.aspx'], ['UPSSSC official website', 'https://upsssc.gov.in/']]
   }
 ];
-
