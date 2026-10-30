@@ -120,7 +120,7 @@ router.post('/import-url', async (req, res) => {
   try {
     const r = await scraper.importUrl(url, { forceDraft: true });
     if (r.post) return res.redirect(`/admin/posts/${r.post.id}?msg=${encodeURIComponent('Imported as draft — review and publish')}`);
-    res.redirect('/admin?msg=' + encodeURIComponent(r.duplicate ? 'Already exists (duplicate)' : `Skipped: ${r.skipped}`));
+    res.redirect('/admin?msg=' + encodeURIComponent(r.duplicate ? 'Already exists (duplicate)' : r.listing ? `That is a section page listing ${r.listing.length} posts, not a post. Paste one post's URL, or add this page as a source.` : `Skipped: ${r.skipped}`));
   } catch (e) { res.redirect('/admin?msg=' + encodeURIComponent('Import failed: ' + e.message)); }
 });
 

@@ -8,12 +8,19 @@ process.env.ADMIN_PASSWORD = 'test-pass';
 process.env.SESSION_SECRET = 'x'.repeat(40);
 
 const assert = require('assert');
+const getStatus = id => require('../src/db').db.prepare('SELECT status FROM posts WHERE id=?').get(id).status;
 const fixture = fs.readFileSync(path.join(__dirname, 'fixture-job.html'), 'utf8');
 
 (async () => {
   const src = http.createServer((req, res) => {
     if (req.url === '/latest-jobs/') return res.end(`<html><body><ul><li><a href="/demo-water-board-junior-clerk-recruitment-2026/">Demo job</a></li><li><a href="/about/">About</a></li></ul></body></html>`);
     if (req.url.startsWith('/demo-water-board')) return res.end(fixture);
+    // A site whose home page links to a section page (/syllabus/) that only lists posts
+    if (req.url === '/home2/') return res.end(`<html><body><a href="/syllabus/">Syllabus</a> <a href="/latest-jobs/">Jobs</a></body></html>`);
+    if (req.url === '/syllabus/') return res.end(`<html><body><h1>Syllabus – Latest Government Exam Syllabus 2026</h1><article><h2>All Latest Syllabus</h2><ul>${
+      ['alpha', 'beta', 'gamma', 'delta', 'epsilon', 'zeta', 'eta'].map(n => `<li><a href="/${n}-board-clerk-recruitment-2026/">${n} board clerk recruitment 2026</a></li>`).join('')}</ul><p>${'Filler text. '.repeat(40)}</p></article></body></html>`);
+    const m = req.url.match(/^\/(alpha|beta|gamma|delta|epsilon|zeta|eta)-board/);
+    if (m) return res.end(fixture.replace(/Demo Water Board/g, `${m[1][0].toUpperCase() + m[1].slice(1)} Water Board`));
     res.statusCode = 404; res.end('');
   }).listen(4801);
 
@@ -62,6 +69,19 @@ const fixture = fs.readFileSync(path.join(__dirname, 'fixture-job.html'), 'utf8'
   }
   // second run must not duplicate
   const r2 = await runAll('test'); assert.strictEqual(r2.imported, 0, 'no duplicates on re-run');
+
+  // Section pages are followed, never posted; an old section-page post is moved back to drafts
+  const { savePost } = require('../src/posts');
+  const old = savePost({ title: 'Syllabus – Latest Government Exam Syllabus 2026', category: 'syllabus', status: 'published', source_url: 'http://localhost:4801/syllabus/', data: {} });
+  require('../src/db').setSetting('max_per_run', '3');
+  db.prepare('INSERT INTO sources(name,list_url) VALUES(?,?)').run('Sections', 'http://localhost:4801/home2/');
+  const r3 = await runAll('test');
+  const posted = db.prepare("SELECT title, source_url FROM posts WHERE source_url LIKE '%-board-clerk-%'").all();
+  console.log('From section page:', r3.imported, 'imported —', posted.map(p => p.title.split(':')[0]).join(' | '));
+  assert.ok(r3.imported >= 1 && r3.imported <= 3, 'posts listed on the section page were imported, within max_per_run');
+  assert.ok(!db.prepare("SELECT 1 FROM posts WHERE source_url='http://localhost:4801/syllabus/' AND status='published'").get(), 'section page is not a published post');
+  assert.strictEqual(getStatus(old.id), 'draft', 'old section-page post moved to drafts');
+  assert.ok(!db.prepare("SELECT 1 FROM seen_urls WHERE url LIKE '%/syllabus/'").get(), 'section page stays re-scannable');
 
   fs.writeFileSync(path.join(__dirname, 'out-home.html'), home.text);
   fs.writeFileSync(path.join(__dirname, 'out-post.html'), page.text);

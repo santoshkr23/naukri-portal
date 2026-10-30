@@ -1,7 +1,7 @@
 const cron = require('node-cron');
 const robotsParser = require('robots-parser');
 const { db, getSettings, log } = require('../db');
-const { extract, discoverLinks } = require('./extract');
+const { extract, discoverLinks, isListingUrl } = require('./extract');
 const { compose, aiIntro } = require('./compose');
 const { savePost } = require('../posts');
 const { fingerprint, nowSql } = require('../util');
@@ -33,6 +33,7 @@ async function importUrl(url, { source = null, forceDraft = false } = {}) {
   if (!(await allowedByRobots(url))) { log('warn', `Skipped (robots.txt disallows): ${url}`); return { skipped: 'robots' }; }
   const html = await fetchText(url);
   const facts = extract(html, url, source?.content_selector);
+  if (facts.isListing) { log('info', `Section page — following its ${facts.childLinks.length} post links instead of posting it: ${url}`); return { listing: facts.childLinks }; }
   if (!facts.title) return { skipped: 'no title' };
   const c = compose(facts);
   const fp = fingerprint(c.base, c.category);
@@ -55,13 +56,16 @@ async function runSource(src) {
   const settings = getSettings();
   const maxPerRun = +settings.max_per_run || 10;
   const result = { found: 0, imported: 0, errors: 0 };
+  unpublishSectionPosts();
   try {
     if (!(await allowedByRobots(src.list_url))) throw new Error('robots.txt disallows the listing URL');
     const body = await fetchText(src.list_url);
     const links = discoverLinks(body, src.list_url, src.link_selector);
     const isSeen = db.prepare('SELECT 1 FROM seen_urls WHERE url=?');
     const markSeen = db.prepare('INSERT OR IGNORE INTO seen_urls(url,source_id,post_id) VALUES(?,?,?)');
-    let fresh = links.filter(u => !isSeen.get(u));
+    // Section pages (/syllabus/, /result/ …) are opened on every run, so new posts listed on them are found
+    const sections = links.filter(isListingUrl);
+    let fresh = links.filter(u => !isListingUrl(u) && !isSeen.get(u));
     result.found = fresh.length;
     if (!links.length) {
       const host = new URL(src.list_url).hostname.replace(/^www\./, '');
@@ -71,17 +75,28 @@ async function runSource(src) {
         (other.length ? ` Its posts seem to live on ${other.join(', ')} — use a listing page on that domain instead.` : ' Try the site\'s RSS feed (often /feed/) or set a "Link area" selector.'));
     }
 
-    if (!src.last_checked) { // first run: don't flood the site with old posts
-      const keep = +settings.first_run_limit || 5;
-      fresh.slice(keep).forEach(u => markSeen.run(u, src.id, null));
-      fresh = fresh.slice(0, keep);
-    }
+    const firstRun = !src.last_checked; // first run: don't flood the site with old posts
+    const keep = +settings.first_run_limit || 5;
+    const trim = list => { if (!firstRun) return list; list.slice(keep).forEach(u => markSeen.run(u, src.id, null)); return list.slice(0, keep); };
+    fresh = trim(fresh);
 
-    for (const url of fresh.slice(0, maxPerRun)) {
+    const queue = [...sections.map(u => ({ url: u, section: true })), ...fresh.map(u => ({ url: u }))];
+    const queued = new Set(queue.map(q => q.url));
+    let fetches = 0;
+    while (queue.length && result.imported < maxPerRun && fetches < maxPerRun * 4) {
+      const { url, section } = queue.shift();
+      fetches++;
       try {
         const r = await importUrl(url, { source: src });
-        markSeen.run(url, src.id, r.post?.id || r.duplicate || null);
-        if (r.post) result.imported++;
+        if (r.listing) {
+          const kids = trim(r.listing.filter(u => !queued.has(u) && !isListingUrl(u) && !isSeen.get(u)));
+          kids.forEach(u => { queued.add(u); queue.push({ url: u }); });
+          result.found += kids.length;
+          if (!section && !isListingUrl(url)) markSeen.run(url, src.id, null);
+        } else {
+          markSeen.run(url, src.id, r.post?.id || r.duplicate || null);
+          if (r.post) result.imported++;
+        }
       } catch (e) {
         result.errors++;
         log('error', `${src.name || src.list_url}: ${e.message}`);
@@ -97,7 +112,15 @@ async function runSource(src) {
   return result;
 }
 
+// Posts that were created from a section page by older versions are moved back to drafts.
+function unpublishSectionPosts() {
+  const bad = db.prepare("SELECT id, title, source_url FROM posts WHERE source_url IS NOT NULL AND status='published'").all().filter(p => isListingUrl(p.source_url));
+  for (const p of bad) { db.prepare("UPDATE posts SET status='draft' WHERE id=?").run(p.id); log('info', `Moved to drafts (was a section page, not a post): "${p.title}" — delete it in Posts`); }
+  return bad.length;
+}
+
 async function runAll(trigger = 'schedule') {
+  unpublishSectionPosts();
   if (running) { log('warn', 'Import already running — skipped'); return null; }
   running = true;
   const t0 = Date.now();
@@ -125,6 +148,7 @@ function startScheduler() {
   if (process.env.SCHEDULER_ENABLED === '0') return;
   const expr = process.env.CRON_SCHEDULE || '5 * * * *';
   cron.schedule(expr, () => runAll('schedule').catch(e => log('error', e.message)), { timezone: 'Asia/Kolkata' });
+  unpublishSectionPosts();
   console.log(`Auto-import scheduled: "${expr}" (Asia/Kolkata)`);
 }
 

@@ -155,6 +155,11 @@ function extract(html, pageUrl, contentSelector) {
 
   const links = [...official.entries()].slice(0, 12).map(([url, v]) => [v.label || v.host, url]);
 
+  // A section/listing page (e.g. /syllabus/, /latest-jobs/) is a list of links to posts, not a post itself.
+  const childLinks = discoverLinks($.html(root), pageUrl, null);
+  const factCount = pairs('dates').length + pairs('fees').length + pairs('age').length + vacancy.length;
+  const isListing = isListingUrl(pageUrl) || (childLinks.length >= 6 && factCount === 0);
+
   return {
     title,
     organization,
@@ -170,7 +175,9 @@ function extract(html, pageUrl, contentSelector) {
       .concat((sections.eligibility?.items || []).map(t => [t, ''])).slice(0, 40),
     selection: (sections.selection?.items || []).filter(t => t.length < 100).slice(0, 10),
     extra: extra.filter(e => e.items.length && e.items.length <= 20 && !/notification|short\s*detail|^.{0,3}$/i.test(e.heading)).slice(0, 4),
-    links
+    links,
+    isListing,
+    childLinks: isListing ? childLinks : []
   };
 }
 
@@ -183,6 +190,10 @@ function dedupeRows(rows) {
 const POST_HINT = /(recruit|online-form|vacanc|bharti|admit|result|answer|syllabus|admission|exam|notification|merit|cut-off|cutoff|city|apply|form|jobs?-\d|\d{4})/i;
 const NOT_POST = /(\/category\/|\/tag\/|\/page\/\d|\/author\/|wp-|\/feed|#|\?replytocom|privacy|contact|about|disclaimer|terms)/i;
 
+// Section pages such as /syllabus/, /latest-jobs/, /result/ or /category/x/ list posts; they are never posts themselves.
+const LISTING_PATH = /^\/(?:category\/[^/]+|(?:latest[-_]?)?(?:jobs?|results?|admit[-_]?cards?|answer[-_]?keys?|syllabus|admissions?|exam[-_]?dates?|notifications?|online[-_]?forms?|certificates?|outsourcing|important|important[-_]?links?|govt[-_]?jobs?|sarkari[-_]?\w+))\/?$/i;
+function isListingUrl(url) { try { return LISTING_PATH.test(new URL(url).pathname); } catch { return false; } }
+
 function discoverLinks(body, listUrl, selector) {
   const base = new URL(listUrl);
   const host = base.hostname.replace(/^www\./, '');
@@ -191,7 +202,7 @@ function discoverLinks(body, listUrl, selector) {
     try {
       const u = new URL(href, listUrl); u.hash = '';
       if (u.hostname.replace(/^www\./, '') !== host) return;
-      if (u.pathname === '/' || NOT_POST.test(u.href)) return;
+      if (u.pathname === '/' || (NOT_POST.test(u.href) && !isListingUrl(u.href))) return;
       if (!selector && !POST_HINT.test(u.pathname)) return;
       const s = u.toString();
       if (!out.includes(s) && s !== base.toString()) out.push(s);
@@ -209,4 +220,4 @@ function discoverLinks(body, listUrl, selector) {
   return out.slice(0, 50);
 }
 
-module.exports = { extract, discoverLinks, classify };
+module.exports = { extract, discoverLinks, classify, isListingUrl };
