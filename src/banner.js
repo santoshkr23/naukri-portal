@@ -1,6 +1,6 @@
 // Colourful 1280x720 banner for every post, made automatically from the post's facts:
 // outlined title, total posts, important dates, highlights, icon tiles, "Apply Online Now" and an original
-// student illustration (assets/student.svg). Used as the post's main image and its share image.
+// big calendar with the key date. Used as the post's main image and its share image.
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
@@ -13,7 +13,6 @@ const F = {
   baloo: { file: path.join(FONTS, 'Baloo2-ExtraBold.ttf'), name: 'Baloo 2 ExtraBold' },
   hind: { file: path.join(FONTS, 'Hind-Bold.ttf'), name: 'Hind Bold' }
 };
-const STUDENT = path.join(__dirname, '..', 'assets', 'student.svg');
 const DIR = path.join(DATA_DIR, 'banner');
 const W = 1280, H = 720;
 const esc = s => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -112,8 +111,14 @@ function facts(post) {
   }[post.category] || ['Official Notification', 'Check Details'];
   for (const x of FILL.filter(Boolean)) if (pts.length < 5) pts.push(x);
 
+  // the date that matters most for this kind of post
+  const keyRow = ({
+    'latest-jobs': [['LAST DATE', last]], admission: [['LAST DATE', last]],
+    'admit-card': [['EXAM DATE', exam], ['RELEASED', get(d.dates, /admit/i)]], result: [['RESULT DATE', get(d.dates, /result|declared/i)]],
+    'answer-key': [['ANSWER KEY', get(d.dates, /answer key|released/i)]], 'exam-date': [['EXAM DATE', exam || (d.dates || [])[0]?.[1]]]
+  }[post.category] || [['LAST DATE', last]]).find(([, v]) => v && /\d{1,2}\s*(?:[–-]\s*\d{1,2}\s*)?[A-Za-z]{3,}|\d{4}-\d{2}-\d{2}/.test(v));
   const total = /^\d+$/.test(String(post.total_posts || '')) ? Number(post.total_posts).toLocaleString('en-IN') : '';
-  return { K, line1: line1.toUpperCase(), line2: rest.toUpperCase(), line3, year, org: post.organization || '', advt: d.advt || '', dates, pts: pts.slice(0, 5), total, category: post.category };
+  return { keyDate: keyRow ? { label: keyRow[0], text: keyRow[1] } : null, K, line1: line1.toUpperCase(), line2: rest.toUpperCase(), line3, year, org: post.organization || '', advt: d.advt || '', dates, pts: pts.slice(0, 5), total, category: post.category };
 }
 
 // ---------- drawing ----------
@@ -187,9 +192,8 @@ async function render(post) {
     cy += 43;
   }
 
-  // person: your uploaded photo (matched to the post), else the drawn student
-  const person = await personLayer(post);
-  L.unshift(person); // behind the boxes and the button
+  // right side: a big calendar with the date that matters most (no people)
+  await calendar(f, put);
 
   // tiles
   const isJob = f.category === 'latest-jobs' || f.category === 'admission';
@@ -220,64 +224,49 @@ async function render(post) {
   return sharp(bg).composite(L.map(l => ({ ...l, left: Math.max(0, l.left), top: Math.max(0, l.top) }))).jpeg({ quality: 86, mozjpeg: true }).toBuffer();
 }
 
-// ---------- photos ----------
-// Photos for the right side of the banner. Put PNGs with a transparent background (best) or JPGs in
-// assets/banner-people/ in the repo (kept for good), or upload them in Admin → Settings (lost on a wiped disk).
-// A file whose name contains a word from the post title is preferred: police-1.png for police jobs, teacher.png…
-const PEOPLE_DIRS = [path.join(DATA_DIR, 'banner-people'), path.join(__dirname, '..', 'assets', 'banner-people')];
-function listPeople() {
-  const out = [];
-  for (const dir of PEOPLE_DIRS) {
-    try { for (const f of fs.readdirSync(dir)) if (/\.(png|jpe?g|webp)$/i.test(f)) out.push({ name: f, file: path.join(dir, f), uploaded: dir === PEOPLE_DIRS[0], mtime: fs.statSync(path.join(dir, f)).mtimeMs }); } catch {}
-  }
-  return out;
+// ---------- calendar ----------
+const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+function splitDate(t) {
+  let m = String(t).match(/(\d{4})-(\d{2})-(\d{2})/);
+  if (m) return { day: String(+m[3]), month: MONTHS[+m[2] - 1], year: m[1] };
+  m = String(t).match(/(\d{1,2})(?:\s*[–-]\s*(\d{1,2}))?\s+([A-Za-z]{3,})\.?,?\s*(\d{4})?/);
+  if (!m) return null;
+  const mon = MONTHS.find(x => x.toLowerCase().startsWith(m[3].slice(0, 3).toLowerCase()));
+  if (!mon) return null;
+  return { day: m[2] ? `${+m[1]}–${+m[2]}` : String(+m[1]), month: mon, year: m[4] || '' };
 }
-function pickPerson(post) {
-  const all = listPeople(); if (!all.length) return null;
-  const words = new Set(String(post.title + ' ' + (post.organization || '')).toLowerCase().split(/[^a-z]+/).filter(w => w.length > 2));
-  const score = p => p.name.toLowerCase().replace(/\.[a-z]+$/, '').split(/[^a-z]+/).filter(w => words.has(w)).length;
-  const TOPIC = /^(police|army|navy|airforce|teacher|railway|bank|nurse|doctor|engineer|court|clerk)/i;
-  const best = Math.max(...all.map(score));
-  // a matching photo; otherwise the general ones (not tied to a topic); otherwise any
-  const general = all.filter(p => !TOPIC.test(p.name));
-  const list = best > 0 ? all.filter(p => score(p) === best) : general.length ? general : all;
-  const h = parseInt(crypto.createHash('md5').update(post.slug).digest('hex').slice(0, 8), 16);
-  return list[h % list.length];
-}
-async function personLayer(post) {
-  const p = pickPerson(post);
-  if (p) {
-    try {
-      const img = sharp(p.file).rotate();
-      const { data, info } = await img.ensureAlpha().raw().toBuffer({ resolveWithObject: true });
-      // transparent background? check the corners
-      const a = (x, y) => data[(y * info.width + x) * 4 + 3];
-      const cut = [a(0, 0), a(info.width - 1, 0), a(0, Math.floor(info.height / 2)), a(info.width - 1, Math.floor(info.height / 2))].every(v => v < 20);
-      if (cut) {
-        const out = await sharp(p.file).rotate().trim().resize({ height: 500, width: 360, fit: 'inside' }).png().toBuffer({ resolveWithObject: true });
-        return { input: out.data, left: W - out.info.width - 4, top: H - 66 - out.info.height };
-      }
-      // a normal photo: framed, with rounded corners and a white border
-      const fw = 236, fh = 330;
-      const photo = await sharp(p.file).rotate().resize(fw, fh, { fit: 'cover', position: 'attention' })
-        .composite([{ input: svg(fw, fh, `<rect width="${fw}" height="${fh}" rx="22" fill="#fff"/>`), blend: 'dest-in' }]).png().toBuffer();
-      const framed = await sharp({ create: { width: fw + 12, height: fh + 12, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } } })
-        .composite([{ input: svg(fw + 12, fh + 12, `<rect width="${fw + 12}" height="${fh + 12}" rx="26" fill="#ffffff"/>`) }, { input: photo, left: 6, top: 6 }]).png().toBuffer();
-      return { input: framed, left: 1036, top: 206 };
-    } catch (e) { console.error('banner photo', p.name, e.message); }
+async function calendar(f, put) {
+  const x = 1046, y = 112, w = 218, h = 418;
+  const d = f.keyDate && splitDate(f.keyDate.text);
+  // rings + card
+  put({ input: svg(w, h, `<rect x="4" y="10" width="${w - 8}" height="${h - 14}" rx="22" fill="#7f1d1d"/><rect x="0" y="4" width="${w - 8}" height="${h - 14}" rx="22" fill="#ffffff" stroke="#dc2626" stroke-width="5"/>
+    <path d="M0 26 a22 22 0 0 1 22 -22 h${w - 52} a22 22 0 0 1 22 22 v84 h-${w - 8} z" fill="#dc2626"/>`), width: w, height: h }, x, y);
+  for (const rx of [46, w - 54]) put({ input: svg(18, 40, '<rect x="3" y="0" width="12" height="40" rx="6" fill="#facc15" stroke="#7f1d1d" stroke-width="3"/>'), width: 18, height: 40 }, x + rx, y - 18);
+  const label = await fitLine(f.keyDate ? f.keyDate.label : ({ syllabus: 'FREE PDF', result: 'RESULT OUT' }[f.category] || 'LATEST UPDATE'), { font: 'anton', color: '#ffffff' }, w - 30, 64, 46, 22);
+  put(label, x + (w - 8 - label.width) / 2, y + 4 + (106 - label.height) / 2 + 6);
+  if (d) {
+    const day = await outlined(await fitLine(d.day, { font: 'anton', color: '#dc2626' }, w - 40, 140, 140, 50), '#fde68a', 4);
+    const mon = await fitLine(d.month.toUpperCase(), { font: 'anton', color: '#1e3a8a' }, w - 34, 52, 40, 20);
+    const yr = d.year ? await txt(d.year, { font: 'anton', size: 32, color: '#0f172a' }) : null;
+    // stack day / month / year, centred in the white part of the card
+    const gap = 6, stack = day.height + gap + mon.height + (yr ? gap + yr.height : 0);
+    let sy = y + 112 + Math.max(4, (h - 112 - 14 - stack) / 2);
+    put(day, x + (w - 8 - day.width) / 2, sy); sy += day.height + gap;
+    put(mon, x + (w - 8 - mon.width) / 2, sy); sy += mon.height + gap;
+    if (yr) put(yr, x + (w - 8 - yr.width) / 2, sy);
+  } else {
+    put(icon({ syllabus: 'doc', result: 'search' }[f.category] || 'case', 120, '#1d4ed8'), x + (w - 8 - 120) / 2, y + 150);
+    const t = await fitLine('Check Details', { font: 'anton', color: '#1e3a8a' }, w - 30, 50, 38, 20); put(t, x + (w - 8 - t.width) / 2, y + 300);
   }
-  const student = await sharp(STUDENT, { density: 160 }).resize({ height: 470 }).png().toBuffer({ resolveWithObject: true });
-  return { input: student.data, left: W - student.info.width + 6, top: H - 66 - student.info.height + 4 };
 }
 
 async function bannerFile(post) {
   fs.mkdirSync(DIR, { recursive: true });
   const f = facts(post);
-  const person = pickPerson(post);
-  const v = crypto.createHash('md5').update(JSON.stringify([f, getSettings().site_name, person && [person.name, person.mtime], 5])).digest('hex').slice(0, 10);
+  const v = crypto.createHash('md5').update(JSON.stringify([f, getSettings().site_name, 6])).digest('hex').slice(0, 10);
   const file = path.join(DIR, `${post.slug}-${v}.jpg`);
   if (!fs.existsSync(file)) fs.writeFileSync(file, await render(post));
   return file;
 }
 
-module.exports = { bannerFile, facts, listPeople, PEOPLE_DIRS };
+module.exports = { bannerFile, facts };

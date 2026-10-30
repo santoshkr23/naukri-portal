@@ -36,32 +36,5 @@
   <button class="btn">Save settings</button>
 </form>
 
-<section class="card" id="banner-photos">
-  <h2>Banner photo</h2>
-  <p class="muted">The person on the right of every post's banner. Without a photo, the drawn student is used.</p>
-  <% if (sample) { %><p><a href="/banner/<%= sample.slug %>.jpg" target="_blank"><img src="/banner/<%= sample.slug %>.jpg?t=<%= Date.now() %>" alt="Banner preview" style="width:100%;max-width:640px;border-radius:10px;border:1px solid #dbe4e1"></a></p><% } %>
-  <% if (people.length) { %>
-    <div class="people-grid">
-      <% people.forEach(p => { %>
-        <figure><img src="/admin/banner-people/<%= encodeURIComponent(p.name) %>" alt="<%= p.name %>"><figcaption><%= p.name %><% if (p.uploaded) { %>
-          <form method="post" action="/admin/banner-people/<%= encodeURIComponent(p.name) %>/delete" onsubmit="return confirm('Remove this photo?')"><button class="linkbtn danger">Remove</button></form><% } else { %> <span class="muted small">(in GitHub)</span><% } %></figcaption></figure>
-      <% }) %>
-    </div>
-  <% } %>
-  <form method="post" action="/admin/banner-people" enctype="multipart/form-data" class="pform">
-    <div class="grid2">
-      <label>Photo (PNG with transparent background is best)<input type="file" name="photo" accept="image/png,image/jpeg,image/webp" required></label>
-      <label>Use for (optional) <input name="topic" placeholder="e.g. police, railway, teacher — blank = all posts"></label>
-    </div>
-    <button class="btn">Upload photo</button>
-  </form>
-  <details><summary>How to make a photo with free AI</summary>
-    <ol class="steps-list">
-      <li>Open <strong>ChatGPT</strong>, <strong>Google Gemini</strong> or <strong>Bing Image Creator</strong> and ask for, for example: <em>“Photorealistic young Indian woman in her early 20s, smiling confidently, teal kurta with a pink dupatta, ID card on a lanyard, holding books and a file, waist-up, facing the camera, plain white background, soft studio light.”</em></li>
-      <li>Remove the background for a cut-out look (free at <strong>remove.bg</strong> or in Canva) and download it as <strong>PNG</strong>.</li>
-      <li>Upload it here. On Render's free plan uploads are wiped on restart — to keep it for good, also add the file to your GitHub repo in <code>assets/banner-people/</code> (GitHub → Add file → Upload files).</li>
-    </ol>
-    <p class="muted small">Use pictures you made or have a licence for — never photos of real people copied from other websites.</p>
-  </details>
-</section>
+
 <%- include('_bottom') %>
