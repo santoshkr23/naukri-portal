@@ -154,7 +154,7 @@ function envQuote(v) {
 function settingsAsEnv() {
   const lines = [];
   for (const r of db.prepare('SELECT key, value FROM settings ORDER BY key').all()) {
-    if (!ENV_SETTING.test(r.key) || r.key === 'site_url' || r.value === '' || r.value === DEFAULT_SETTINGS[r.key]) continue;
+    if (!ENV_SETTING.test(r.key) || r.key === 'site_url' || r.value === '' || r.value === DEFAULT_SETTINGS[r.key] || (/_enabled$/.test(r.key) && r.value === '0')) continue;
     lines.push(`${r.key.toUpperCase()}=${envQuote(r.value)}`);
   }
   const sources = db.prepare('SELECT name, list_url, link_selector, content_selector, enabled FROM sources ORDER BY id').all();

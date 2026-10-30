@@ -230,12 +230,31 @@ router.get('/social', (req, res) => {
     lastErr: db.prepare("SELECT created_at, platform, error FROM social_log WHERE status='error' ORDER BY id DESC LIMIT 1").get(),
     upSince: new Date(Date.now() - process.uptime() * 1000).toISOString().replace('T', ' ').slice(0, 16) });
 });
+// What each field must look like — catches a browser auto-filling the admin login into these boxes
+const SOCIAL_FORMAT = {
+  tg_token: [/^\d{5,}:[A-Za-z0-9_-]{30,}$/, 'Telegram bot token looks like 123456789:AAH… (copy it again from @BotFather)'],
+  tg_chats: [/^(@[A-Za-z][A-Za-z0-9_]{3,}|-?\d{5,})([\s,]+(@[A-Za-z][A-Za-z0-9_]{3,}|-?\d{5,}))*$/, 'Telegram channel must be @username or a number like -1001234567890'],
+  fb_page_id: [/^\d{5,}$/, 'Facebook Page ID is a number'],
+  ig_user_id: [/^\d{5,}$/, 'Instagram account ID is a number (e.g. 1784…)'],
+  pin_board: [/^\d{5,}$/, 'Pinterest Board ID is a number'],
+  fb_token: [/^EA[A-Za-z0-9]{40,}$/, 'Facebook token starts with EA…'],
+  ig_token: [/^(EA|IG)[A-Za-z0-9]{40,}$/, 'Instagram token starts with EA… or IG…'],
+  pin_token: [/^[A-Za-z0-9_.\-]{20,}$/, 'Pinterest token looks wrong'],
+  x_api_key: [/^[A-Za-z0-9]{15,}$/, 'X API key looks wrong'], x_api_secret: [/^[A-Za-z0-9]{30,}$/, 'X API key secret looks wrong'],
+  x_access_token: [/^\d+-[A-Za-z0-9]{20,}$/, 'X access token looks like 12345-AbC…'], x_access_secret: [/^[A-Za-z0-9]{30,}$/, 'X access token secret looks wrong']
+};
 function saveSocial(req) {
+  const problems = [];
+  const login = [process.env.ADMIN_USER || 'admin', process.env.ADMIN_PASSWORD].filter(Boolean);
   for (const p of Object.keys(social.PLATFORMS)) {
     setSetting(`${p}_enabled`, req.body[`${p}_enabled`] === '1' ? '1' : '0');
     for (const k of social.PLATFORMS[p].keys) {
       const v = String(req.body[k] ?? '').trim();
       if (social.SECRET_KEYS.includes(k) && !v) continue; // blank secret field = keep the saved one
+      if (v && (login.includes(v) || (SOCIAL_FORMAT[k] && !SOCIAL_FORMAT[k][0].test(v)))) {
+        problems.push(login.includes(v) ? `${social.PLATFORMS[p].name}: your browser filled in your admin login — enter the real value` : SOCIAL_FORMAT[k][1]);
+        continue; // keep the previous value
+      }
       setSetting(k, v);
     }
   }
@@ -244,8 +263,12 @@ function saveSocial(req) {
   setSetting('social_per_run', String(Math.min(20, Math.max(1, +req.body.social_per_run || 3))));
   setSetting('social_hashtags', String(req.body.social_hashtags || '').trim());
   setSetting('graph_version', String(req.body.graph_version || '').trim());
+  return problems;
 }
-router.post('/social', (req, res) => { saveSocial(req); res.redirect('/admin/social?msg=' + encodeURIComponent('Saved')); });
+router.post('/social', (req, res) => {
+  const problems = saveSocial(req);
+  res.redirect('/admin/social?msg=' + encodeURIComponent(problems.length ? `✗ Not saved: ${problems.join(' · ')}. Everything else was saved.` : 'Saved'));
+});
 router.post('/social/forget/:key', (req, res) => {
   if (social.SECRET_KEYS.includes(req.params.key)) setSetting(req.params.key, '');
   res.redirect('/admin/social?msg=' + encodeURIComponent('Removed'));
@@ -253,7 +276,7 @@ router.post('/social/forget/:key', (req, res) => {
 router.post('/social/check/:platform', async (req, res) => {
   const p = req.params.platform;
   if (!social.PLATFORMS[p]) return res.redirect('/admin/social');
-  if (req.body.tg_chats !== undefined) saveSocial(req); // "Save & check" sends the whole form
+  if (req.body.tg_chats !== undefined) { const problems = saveSocial(req); if (problems.length) return res.redirect('/admin/social?msg=' + encodeURIComponent(`✗ Not saved: ${problems.join(' · ')}`)); }
   try { res.redirect('/admin/social?msg=' + encodeURIComponent(`✓ ${social.PLATFORMS[p].name} connected: ${await social.checkPlatform(p)}`)); }
   catch (e) { res.redirect('/admin/social?msg=' + encodeURIComponent(`✗ ${social.PLATFORMS[p].name}: ${e.message}`)); }
 });

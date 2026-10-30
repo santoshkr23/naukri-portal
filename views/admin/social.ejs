@@ -50,7 +50,7 @@
 
   <% const field = (k, label, ph) => { const secret = SECRET.includes(k); const saved = !!(s[k] || fromEnv[k]); %>
     <label><%= label %><% if (fromEnv[k]) { %> <span class="tag published">from environment</span><% } %>
-      <input name="<%= k %>" <%= secret ? 'type=password' : '' %> value="<%= secret ? '' : (s[k] || '') %>" placeholder="<%= secret && saved ? 'saved — leave blank to keep' : ph %>">
+      <input name="<%= k %>" <%- secret ? 'type="password" autocomplete="new-password"' : 'type="text" autocomplete="off"' %> data-lpignore="true" data-1p-ignore spellcheck="false" value="<%= secret ? '' : (s[k] || '') %>" placeholder="<%= secret && saved ? 'saved — leave blank to keep' : ph %>">
     </label>
   <% } %>
 
