@@ -1,3 +1,7 @@
+/* Never wider than the screen */
+img,svg,video,iframe{max-width:100%;height:auto}
+html,body{overflow-x:clip}
+
 *{box-sizing:border-box}
 body{margin:0;background:#f3f5f4;color:#172321;font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
 a{color:#0a5c8a}
@@ -85,3 +89,6 @@ th.ck,td.ck{width:34px;padding-right:0}
 .status-list li.warn::before{content:"!";color:#b45309;left:9px}
 .steps-list{margin:6px 0 10px;padding-left:20px;line-height:1.7}
 .social-prev img{width:360px}
+
+/* Long addresses and codes wrap instead of sticking out */
+code,.small,td,.flash{overflow-wrap:anywhere}

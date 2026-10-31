@@ -1,3 +1,7 @@
+/* Never wider than the screen */
+img,svg,video,iframe{max-width:100%;height:auto}
+html,body{overflow-x:clip}
+
 :root{
   --ink:#14211f; --muted:#5b6b68; --line:#d9e3e0; --bg:#f4f6f2; --paper:#fff;
   --brand:#0b3d3a; --brand2:#12655f; --accent:#f2a516; --link:#0a5c8a;
@@ -194,3 +198,6 @@ tbody tr:last-child td{border-bottom:0}
 .post-banner img{width:100%;height:auto;display:block;border-radius:var(--radius);box-shadow:0 2px 10px rgba(0,0,0,.08)}
 .hn-list img{height:68px}
 .hn-list img{height:68px;object-fit:cover}
+
+/* Long words and links wrap on small screens */
+p,li,td,dd,dt,h1,h2,h3,a,code{overflow-wrap:anywhere}

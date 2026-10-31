@@ -32,7 +32,16 @@ app.use((req, res, next) => {
   }
   next();
 });
+// Version stamp for CSS/JS links: the address changes when the file changes, so browsers never keep a stale copy
+const assetVer = {};
+function asset(p) {
+  const file = path.join(__dirname, '..', 'public', p);
+  let v = assetVer[p];
+  try { const m = require('fs').statSync(file).mtimeMs; if (!v || v.m !== m) v = assetVer[p] = { m, h: require('crypto').createHash('md5').update(require('fs').readFileSync(file)).digest('hex').slice(0, 8) }; } catch { return `/static/${p}`; }
+  return `/static/${p}?v=${v.h}`;
+}
 app.use((req, res, next) => {
+  res.locals.asset = asset;
   res.locals.settings = getSettings();
   res.locals.baseUrl = (process.env.BASE_URL || `${req.protocol}://${req.get('host')}`).replace(/\/$/, '');
   res.locals.CATEGORIES = CATEGORIES;
