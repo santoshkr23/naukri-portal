@@ -40,6 +40,7 @@ function checks(req) {
     // ---- Growth
     C('Growth', 'Telegram / WhatsApp join buttons', s.telegram_url || s.whatsapp_url ? 'ok' : 'warn', s.telegram_url || s.whatsapp_url ? [s.telegram_url, s.whatsapp_url].filter(Boolean).join(' · ') : 'Add your channel links in Settings — a Join button appears on every page.', '/admin/settings'),
     C('Growth', 'Social media auto-posting', socialOn.length ? 'ok' : 'warn', socialOn.length ? socialOn.join(', ') : 'No account connected yet.', '/admin/social'),
+    C('Growth', 'Browser job alerts', s.push_enabled !== '0' ? 'ok' : 'warn', s.push_enabled !== '0' ? `${require('./push').count()} subscribers — hourly round-up${env.VAPID_PUBLIC_KEY ? '' : ' (save the VAPID keys with Keep settings so they survive restarts)'}` : 'Turned off.', '/admin/notifications'),
     C('Growth', 'Hindi news stories', s.auto_news !== '0' ? 'ok' : 'warn', s.auto_news !== '0' ? 'Written automatically for every update.' : 'Turned off in Settings.', '/admin/settings'),
     C('Growth', 'Fresh posts every day', sources || require('./routes/api').keyConfigured() ? 'ok' : 'warn', sources ? `${sources} auto-import source(s) on` : require('./routes/api').keyConfigured() ? 'API key set for automation' : 'Add auto-import sources or connect n8n through the API, so new jobs appear within hours.', '/admin/api'),
 

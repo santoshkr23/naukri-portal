@@ -1,0 +1,46 @@
+<%- include('_top') %>
+<h1>Job alerts (browser notifications)</h1>
+<p class="muted">Visitors tap <strong>🔔 Job alerts</strong> in the header (or the invite shown on their second page view) and allow notifications. Once an hour, everyone gets <strong>one</strong> notification with the updates published since the last one — a single update shows its banner and opens the post; several show a list and open the home page.</p>
+
+<div class="two">
+  <section class="card">
+    <h2>Subscribers</h2>
+    <p style="font-size:32px;margin:4px 0"><strong><%= total %></strong></p>
+    <p class="muted small"><%= week %> new in the last 7 days<% if (byDevice.length) { %> · <%= byDevice.map(d => `${d.d} ${d.c}`).join(' · ') %><% } %></p>
+    <p class="muted small"><strong>Last round-up:</strong> <%= s.push_last_result || 'none yet' %></p>
+    <form method="post" action="/admin/notifications/run"><button class="btn ghost">Send the round-up now</button></form>
+  </section>
+  <section class="card">
+    <h2>Settings</h2>
+    <form method="post" action="/admin/notifications/settings" class="pform">
+      <label class="check"><input type="checkbox" name="push_enabled" value="1" <%= s.push_enabled !== '0' ? 'checked' : '' %>> Job alerts on (shows the bell and sends the hourly round-up)</label>
+      <label class="check"><input type="checkbox" name="push_quiet" value="1" <%= s.push_quiet !== '0' ? 'checked' : '' %>> Quiet at night — nothing between 10 pm and 7 am; night updates go in the 7 am round-up</label>
+      <button class="btn">Save</button>
+    </form>
+  </section>
+</div>
+
+<section class="card">
+  <h2>Send a message to everyone</h2>
+  <p class="muted small">For something big, e.g. a result just declared. Use it rarely — people turn off alerts that feel like spam.</p>
+  <form method="post" action="/admin/notifications/send" class="pform" onsubmit="return confirm('Send this notification to all <%= total %> subscribers now?')">
+    <div class="grid2">
+      <label>Title<input name="title" maxlength="80" required placeholder="🔔 SSC GD Result 2026 जारी"></label>
+      <label>Link (page to open)<input name="url" placeholder="/ssc-gd-constable-result-2026/"></label>
+    </div>
+    <label>Message<textarea name="body" rows="2" maxlength="240" placeholder="रिजल्ट जारी — अपना रोल नंबर अभी चेक करें"></textarea></label>
+    <button class="btn">Send now</button>
+  </form>
+</section>
+
+<section class="card status-list">
+  <h2>Where it works</h2>
+  <ul>
+    <li class="ok"><strong>Android (Chrome, Edge, Samsung, Firefox) and computers:</strong> every hour, even when the browser is closed.</li>
+    <li class="warn"><strong>iPhone / iPad:</strong> only after the visitor taps <em>Share → Add to Home Screen</em> and opens the site from that icon (iOS 16.4+). The site shows them this tip when they tap the bell.</li>
+    <li class="ok"><strong>Any browser, while the site is open:</strong> the page checks every hour and shows the alert itself.</li>
+    <li class="<%= keysFromEnv ? 'ok' : 'bad' %>"><strong>Keys kept across restarts:</strong> <%= keysFromEnv ? 'VAPID keys come from the environment.' : 'On hosts that wipe the disk (Render free plan), save the VAPID keys as environment variables — open Keep settings and paste the lines into Render. If the keys change, every subscriber has to visit again to keep getting alerts.' %> <a href="/admin/keep-settings">Keep settings →</a></li>
+    <li class="info"><strong>Subscriber list on a wiped disk:</strong> each subscriber is re-added automatically the next time they open the site, so alerts resume after a restart once they visit.</li>
+  </ul>
+</section>
+<%- include('_bottom') %>

@@ -39,6 +39,42 @@ router.get('/:key.txt', (req, res, next) => {
   res.type('text/plain').send(k);
 });
 
+// ---------- Job alerts (browser notifications) ----------
+const push = require('../push');
+router.get('/sw.js', (req, res) => {
+  res.set({ 'Service-Worker-Allowed': '/', 'Cache-Control': 'no-cache' }).type('application/javascript')
+    .sendFile(require('path').join(__dirname, '..', '..', 'public', 'sw.js'));
+});
+router.get('/push/key', (req, res) => res.set('Cache-Control', 'no-store').json(push.keys()));
+router.post('/push/subscribe', express.json({ limit: '8kb' }), (req, res) => {
+  if (res.locals.settings.push_enabled === '0') return res.status(503).json({ ok: false });
+  try { push.subscribe(req.body?.subscription, req.body?.sections, req.get('user-agent')); res.json({ ok: true }); }
+  catch (e) { res.status(400).json({ ok: false, error: e.message }); }
+});
+router.post('/push/unsubscribe', express.json({ limit: '8kb' }), (req, res) => res.json({ ok: true, removed: push.unsubscribe(req.body?.endpoint) }));
+router.get('/push/latest', (req, res) => res.set('Cache-Control', 'no-store').json({ now: new Date().toISOString(), posts: push.latestSince(String(req.query.since || '')) }));
+
+// App manifest and icons (for "Add to Home Screen" — needed for alerts on iPhone)
+router.get('/manifest.webmanifest', (req, res) => {
+  const s = res.locals.settings;
+  res.type('application/manifest+json').json({ name: s.site_name, short_name: s.site_name.slice(0, 12), description: s.site_tagline, start_url: '/?source=app', scope: '/',
+    display: 'standalone', background_color: '#f4f6f2', theme_color: '#0b3d3a', lang: 'hi',
+    icons: [{ src: '/icon-192.png', sizes: '192x192', type: 'image/png' }, { src: '/icon-512.png', sizes: '512x512', type: 'image/png' }, { src: '/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' }] });
+});
+const iconCache = {};
+router.get(/^\/(icon-192|icon-512|badge-72|apple-touch-icon)\.png$/, async (req, res) => {
+  const name = req.params[0], size = { 'icon-192': 192, 'icon-512': 512, 'badge-72': 72, 'apple-touch-icon': 180 }[name];
+  const letter = (res.locals.settings.site_name || 'N').trim()[0].toUpperCase();
+  const key = name + letter;
+  if (!iconCache[key]) {
+    const svg = name === 'badge-72' // small monochrome icon for the Android status bar
+      ? `<svg xmlns="http://www.w3.org/2000/svg" width="72" height="72"><path d="M36 10c-11 0-18 8-18 19v13l-6 8h48l-6-8V29c0-11-7-19-18-19zm-7 44a7 7 0 0 0 14 0z" fill="#fff"/></svg>`
+      : `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 64 64"><rect width="64" height="64" ${name === 'icon-512' ? '' : 'rx="14"'} fill="#f2a516"/><text x="32" y="45" font-family="DejaVu Sans, Arial, sans-serif" font-weight="bold" font-size="38" text-anchor="middle" fill="#0b3d3a">${letter.replace(/[<&>]/g, '')}</text></svg>`;
+    iconCache[key] = await require('sharp')(Buffer.from(svg), { density: 300 }).resize(size, size).png().toBuffer();
+  }
+  res.set('Cache-Control', 'public, max-age=604800').type('png').send(iconCache[key]);
+});
+
 router.get('/robots.txt', (req, res) => {
   res.type('text/plain').send(`User-agent: *\nAllow: /\nDisallow: /admin/\nDisallow: /search/\n\nSitemap: ${res.locals.baseUrl}/sitemap.xml\n`);
 });

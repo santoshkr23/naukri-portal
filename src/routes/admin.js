@@ -299,6 +299,36 @@ router.get('/social/preview/:id/:kind.jpg', async (req, res, next) => {
   res.type('jpg').sendFile(img[req.params.kind].file);
 });
 
+// ---------- Job alerts (browser notifications) ----------
+router.get('/notifications', (req, res) => {
+  const push = require('../push'); push.keys();
+  const s = getSettings();
+  const byDevice = db.prepare(`SELECT CASE WHEN ua LIKE '%Android%' THEN 'Android' WHEN ua LIKE '%iPhone%' OR ua LIKE '%iPad%' THEN 'iPhone / iPad'
+    WHEN ua LIKE '%Windows%' THEN 'Windows' WHEN ua LIKE '%Mac OS%' THEN 'Mac' ELSE 'Other' END d, COUNT(*) c FROM push_subs GROUP BY d ORDER BY c DESC`).all();
+  const week = db.prepare("SELECT COUNT(*) c FROM push_subs WHERE created_at >= datetime('now','-7 days')").get().c;
+  const keysFromEnv = !!(process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY);
+  res.render('admin/notifications', { s, total: push.count(), byDevice, week, keysFromEnv, msg: req.query.msg });
+});
+router.post('/notifications/settings', (req, res) => {
+  setSetting('push_enabled', req.body.push_enabled === '1' ? '1' : '0');
+  setSetting('push_quiet', req.body.push_quiet === '1' ? '1' : '0');
+  res.redirect('/admin/notifications?msg=Saved');
+});
+router.post('/notifications/send', async (req, res) => {
+  const push = require('../push');
+  const title = String(req.body.title || '').trim().slice(0, 80), body = String(req.body.body || '').trim().slice(0, 240);
+  let url = String(req.body.url || '/').trim();
+  if (!title) return res.redirect('/admin/notifications?msg=' + encodeURIComponent('Write a title first.'));
+  if (!/^\/|^https?:\/\//.test(url)) url = '/';
+  const r = await push.sendAll(() => ({ title, body, url }));
+  log('info', `Notifications: custom message "${title}" sent to ${r.sent}/${r.total}`);
+  res.redirect('/admin/notifications?msg=' + encodeURIComponent(`Sent to ${r.sent} of ${r.total} subscribers${r.gone ? ` (${r.gone} expired removed)` : ''}.`));
+});
+router.post('/notifications/run', async (req, res) => {
+  const r = await require('../push').digest({ force: true });
+  res.redirect('/admin/notifications?msg=' + encodeURIComponent(r.posts ? `Round-up sent: ${r.posts} new updates to ${r.sent} of ${r.total} subscribers.` : 'No new updates since the last round-up — nothing sent.'));
+});
+
 // ---------- Launch checklist ----------
 router.get('/launch', (req, res) => res.render('admin/launch', { items: require('../launch').checks(req) }));
 

@@ -23,5 +23,6 @@
   </div>
   <div class="wrap copy">© <%= new Date().getFullYear() %> <%= settings.site_name %></div>
 </footer>
+<% if (settings.push_enabled !== '0') { %><script src="<%= asset('js/alerts.js') %>" defer></script><% } %>
 </body>
 </html>

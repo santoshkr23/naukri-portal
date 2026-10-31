@@ -75,5 +75,6 @@ if (require.main === module) {
   app.listen(port, () => console.log(`Site running on http://localhost:${port}  (admin: /admin)`));
   require('./scraper').startScheduler();
   require('./social').startWorker();
+  require('./push').start();
 }
 module.exports = app;
