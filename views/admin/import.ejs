@@ -1,7 +1,7 @@
 <%- include('_top') %>
 <h1>Import from Excel</h1>
 <p class="muted">Upload your posting sheet (.xlsx). Each sheet goes to the section with the same name — <strong>Latest Jobs, Admit Card, Result, Answer Key, Admission, Syllabus, Exam Date, Certificate, Outsourcing, Important</strong>. Rows already on the site are updated with the sheet's values; new rows are published. Jobs whose last date has passed are skipped.</p>
-<p class="muted small">Your own text in the <em>YOUR short info / how to apply / FAQs</em> columns replaces the generated text (cells starting with "EXAMPLE" are ignored). Titles in <em>All Posts – To Write</em> that aren't on the site yet are added as <strong>drafts</strong> — set their Status to "Done" in the sheet to stop that.</p>
+<p class="muted small">Your own text in the <em>YOUR short info / how to apply / FAQs</em> columns replaces the generated text (cells starting with "EXAMPLE" are ignored). <em>All Posts – To Write</em> is treated as your to-do list only: no blank drafts are made from it. Move a row into its section's sheet with the details filled in to publish it.</p>
 
 <section class="card">
   <form method="post" action="/admin/import" enctype="multipart/form-data" class="pform">
@@ -14,7 +14,7 @@
 <% if (report) { %>
 <section class="card">
   <h2>Result</h2>
-  <p><strong><%= report.created.length %></strong> new · <strong><%= report.updated.length %></strong> updated · <strong><%= report.unchanged.length %></strong> unchanged · <strong><%= report.drafts.length %></strong> drafts added · <strong><%= report.skipped.length %></strong> skipped</p>
+  <p><strong><%= report.created.length %></strong> new · <strong><%= report.updated.length %></strong> updated · <strong><%= report.unchanged.length %></strong> unchanged · <% if (report.removedBlank) { %><strong><%= report.removedBlank %></strong> blank drafts deleted · <% } %> <strong><%= report.skipped.length %></strong> skipped</p>
   <p class="muted small">Sheets read: <%= report.sheets.join(', ') %></p>
   <% [['New posts', report.created], ['Updated', report.updated], ['Drafts to write', report.drafts], ['Skipped', report.skipped]].forEach(([h, list]) => { if (!list.length) return; %>
     <details <%= h !== 'Drafts to write' ? 'open' : '' %>><summary><strong><%= h %></strong> (<%= list.length %>)</summary><ul class="small"><% list.forEach(x => { %><li><%= x %></li><% }) %></ul></details>

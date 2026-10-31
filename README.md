@@ -32,7 +32,7 @@ npm test                  # end-to-end test with a fictional source site
 |---|---|---|
 | Latest Jobs | Latest Jobs | Post name, Organisation, Last date, All important dates, Application fee, Min/Max age, Vacancy (post – count), Eligibility (post – qualification), Pay, Selection process, Official links |
 | Admit Card, Result, Answer Key, Admission, Syllabus, Exam Date, Certificate, Outsourcing, Important | same name | Title, Organisation, Key dates, Login needed, Next stages, Fee, Eligibility, Exam pattern (`a \| b \| c` rows), Marking / notes, Main topics, Official links |
-| All Posts – To Write | from the Section column | Titles not yet on the site are added as **drafts**; set Status to "Done" to stop that |
+| All Posts – To Write | — | Your to-do list only; no drafts are created from it (setting `TODO_DRAFTS=1` brings blank drafts back) |
 
 - One item per line inside a cell: `Label: value` for dates, fees and links, `Post – value` for vacancy and eligibility.
 - Your own text in **YOUR short info / YOUR how to apply / YOUR FAQs** (`Q: … A: …`) replaces the generated text. Cells starting with "EXAMPLE" are ignored.

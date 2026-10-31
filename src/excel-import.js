@@ -224,7 +224,7 @@ function importWorkbook(...args) {
 async function importWorkbookNow(file = DEFAULT_FILE, { today = new Date().toISOString().slice(0, 10) } = {}) {
   const wb = new ExcelJS.Workbook();
   if (Buffer.isBuffer(file)) await wb.xlsx.load(file); else await wb.xlsx.readFile(file);
-  const report = { created: [], updated: [], unchanged: [], drafts: [], skipped: [], sheets: [], closedTitles: [] };
+  const report = { created: [], updated: [], unchanged: [], drafts: [], skipped: [], sheets: [], closedTitles: [], todoTitles: [], removedBlank: 0 };
 
   wb.eachSheet(ws => {
     const { col } = reader(ws);
@@ -247,14 +247,20 @@ async function importWorkbookNow(file = DEFAULT_FILE, { today = new Date().toISO
       } catch (e) { report.skipped.push(`${ws.name} row ${n}: ${e.message}`); }
     });
   });
-  log('info', `Excel import: ${report.created.length} new, ${report.updated.length} updated, ${report.unchanged.length} unchanged, ${report.drafts.length} drafts, ${report.skipped.length} skipped`);
+  if (require('./db').getSettings().todo_drafts !== '1') report.removedBlank = removeBlankTodoDrafts(report.todoTitles);
+  log('info', `Excel import: ${report.removedBlank ? report.removedBlank + ' blank drafts deleted, ' : ''}${report.created.length} new, ${report.updated.length} updated, ${report.unchanged.length} unchanged, ${report.drafts.length} drafts, ${report.skipped.length} skipped`);
   return report;
 }
 
 // "All Posts – To Write": add titles that aren't on the site yet as drafts.
+// "All Posts – To Write" is only your to-do list: its titles have no dates, fees or links, so no draft is
+// created for them (set the setting todo_drafts=1 to create blank drafts again). Blank drafts made from it
+// earlier are deleted on import.
 function todoRow(row, col, report) {
   const t = re => { const i = col(re); return i ? cellText(row.getCell(i).value) : ''; };
   const title = t(/^post title/), category = categoryOf(t(/^section/));
+  if (title) report.todoTitles.push(title);
+  if (require('./db').getSettings().todo_drafts !== '1') return;
   if (!title || /done|skip|ignore|posted/i.test(t(/^status/))) return;
   if (!category) { report.skipped.push(`${title}: unknown section "${t(/^section/)}"`); return; }
   // Words in brackets matter here: "Combined JE (Electrical)" and "Combined JE (Mechanical)" are two different drafts
@@ -268,6 +274,20 @@ function todoRow(row, col, report) {
       links: /^https?:\/\//.test(link) ? [['Official website', link]] : [], faqs: [], extra: [] }
   });
   report.drafts.push(title);
+}
+
+// Unpublished posts that are still empty (no intro, dates, fees or links) and whose title is on the To Write list
+function removeBlankTodoDrafts(titles) {
+  const want = new Set(titles.map(x => x.trim().toLowerCase()));
+  const rows = db.prepare("SELECT id, title, data, fingerprint FROM posts WHERE status='draft' AND category<>'news' AND source_url IS NULL").all();
+  const del = db.prepare('DELETE FROM posts WHERE id=?');
+  let n = 0;
+  for (const r of rows) {
+    let d = {}; try { d = JSON.parse(r.data || '{}'); } catch {}
+    const blank = !String(d.intro || '').trim() && !(d.dates || []).length && !(d.fees || []).length && !(d.vacancy || []).length && (d.links || []).length <= 1;
+    if (blank && want.has(r.title.trim().toLowerCase())) { del.run(r.id); n++; }
+  }
+  return n;
 }
 
 if (require.main === module) {
