@@ -1,0 +1,28 @@
+<%- include('_top') %>
+<h1>Recycle bin</h1>
+<p class="muted">Deleted posts wait here for 30 days, then they are removed for good. Restoring puts a post back on the site at the same address, with its news story.</p>
+<form method="post" action="/admin/trash/restore">
+<div class="card flush">
+<table>
+  <thead><tr><th class="ck"><input type="checkbox" aria-label="Select all" onclick="document.querySelectorAll('input[name=ids]').forEach(b => b.checked = this.checked)"></th><th>Post</th><th>Deleted by</th><th>When (UTC)</th><th>Days left</th><th></th></tr></thead>
+  <tbody>
+  <% rows.forEach(r => { %>
+    <tr>
+      <td class="ck"><input type="checkbox" name="ids" value="<%= r.id %>" aria-label="Select"></td>
+      <td><%= r.title %><div class="muted small"><%= CATEGORIES[r.category]?.short %> · was <%= r.status === 'published' ? 'published' : 'unpublished' %></div></td>
+      <td><strong><%= r.deleted_by %></strong></td>
+      <td class="small nowrap"><%= r.deleted_at %></td>
+      <td><%= Math.max(0, r.days_left) %></td>
+      <td class="nowrap actions">
+        <button class="linkbtn" formaction="/admin/trash/<%= r.id %>/restore">Restore</button>
+        <% if (can('trash.purge')) { %><button class="linkbtn danger" formaction="/admin/trash/<%= r.id %>/purge" onclick="return confirm('Delete this post for good? This cannot be undone.')">Delete for good</button><% } %>
+      </td>
+    </tr>
+  <% }) %>
+  </tbody>
+</table>
+<% if (!rows.length) { %><p class="muted pad">The recycle bin is empty.</p><% } %>
+</div>
+<% if (rows.length) { %><p><button class="btn">Restore selected</button></p><% } %>
+</form>
+<%- include('_bottom') %>

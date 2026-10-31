@@ -98,3 +98,12 @@ pre.code{background:#0f172a;color:#e2e8f0;padding:12px 14px;border-radius:8px;ov
 .launch-score .bar{height:10px;background:#e6ecea;border-radius:99px;margin-top:8px;overflow:hidden}
 .launch-score .bar span{display:block;height:100%;background:#15803d}
 .status-list li.info::before{content:"i";color:#0a5c8a;left:10px;font-style:italic}
+
+tr.act-warn td{background:#fff7ed}
+.actions details{display:inline-block}
+.actions summary{list-style:none;cursor:pointer;color:#0a5c8a}
+.actions summary::-webkit-details-marker{display:none}
+.who{color:#d8ebe8;font-size:13px;padding:6px 10px}
+
+/* wide tables scroll inside their card on small screens */
+.card{overflow-x:auto}

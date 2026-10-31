@@ -14,7 +14,7 @@
     <div class="grid3">
       <label>URL slug<input name="slug" value="<%= post.slug || '' %>" placeholder="auto from title"></label>
       <label>Advt. number<input name="advt" value="<%= d.advt || '' %>"></label>
-      <label>Status<select name="status"><option value="draft" <%= post.status!=='published'?'selected':'' %>>Draft</option><option value="published" <%= post.status==='published'?'selected':'' %>>Published</option></select></label>
+      <label>Status<select name="status"><option value="draft" <%= post.status!=='published'?'selected':'' %>>Draft</option><% if (can('posts.publish')) { %><option value="published" <%= post.status==='published'?'selected':'' %>>Published</option><% } %></select><% if (!can('posts.publish')) { %><span class="muted small">An Editor, Admin or the Owner publishes it.</span><% } %></label>
     </div>
     <label>Meta description (≤160 characters — the snippet Google shows)<textarea name="meta_description" rows="2" maxlength="170"><%= post.meta_description || '' %></textarea></label>
     <label class="check"><input type="checkbox" name="featured" value="1" <%= post.featured ? 'checked' : '' %>> Feature in the top tiles on the home page</label>

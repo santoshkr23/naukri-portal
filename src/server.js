@@ -62,6 +62,8 @@ app.use((err, req, res, next) => { console.error(err); res.status(500).send('Som
 const port = process.env.PORT || 3000;
 if (require.main === module) {
   { const n = require('./db').restoreSources(); if (n) console.log(`Restored ${n} auto-import sources from IMPORT_SOURCES`); }
+  { const n = require('./auth').restoreUsers(); if (n) console.log(`Restored ${n} team members from ADMIN_USERS`); }
+  require('node-cron').schedule('30 3 * * *', () => require('./audit').autoPurge(), { timezone: 'Asia/Kolkata' });
   // content/posts.xlsx (your Excel sheet) is the source of posts when present; otherwise the starter set in jobs-data.js is used
   const xl = require('./excel-import');
   if (xl.hasDefaultFile() && process.env.IMPORT_EXCEL !== '0') {

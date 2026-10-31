@@ -1,0 +1,25 @@
+<%- include('_top') %>
+<h1>Activity</h1>
+<p class="muted">Who did what in the admin and through the API — kept for 180 days.</p>
+<form class="row filters" method="get">
+  <select name="who" onchange="this.form.submit()"><option value="">Everyone</option><% people.forEach(p => { %><option <%= who === p ? 'selected' : '' %>><%= p %></option><% }) %></select>
+  <select name="action" onchange="this.form.submit()"><option value="">All actions</option><% actions.forEach(a => { %><option <%= action === a ? 'selected' : '' %>><%= a %></option><% }) %></select>
+  <% if (who || action) { %><a class="linkbtn" href="/admin/activity">Clear</a><% } %>
+</form>
+<div class="card flush">
+<table>
+  <thead><tr><th>When (UTC)</th><th>Who</th><th>Did</th><th>Post / details</th></tr></thead>
+  <tbody>
+  <% rows.forEach(r => { %>
+    <tr class="<%= /deleted|failed|switched off|removed/.test(r.action) ? 'act-warn' : '' %>">
+      <td class="small nowrap"><%= r.at %></td>
+      <td><strong><%= r.who %></strong><div class="muted small"><%= ROLES[r.role] ? ROLES[r.role].name : r.role %></div></td>
+      <td><%= r.action %></td>
+      <td><%= r.title || '' %><% if (r.detail) { %><div class="muted small"><%= r.detail %></div><% } %><% if (r.action === 'deleted') { %> <a class="small" href="/admin/trash">Recycle bin →</a><% } %></td>
+    </tr>
+  <% }) %>
+  </tbody>
+</table>
+<% if (!rows.length) { %><p class="muted pad">Nothing yet.</p><% } %>
+</div>
+<%- include('_bottom') %>

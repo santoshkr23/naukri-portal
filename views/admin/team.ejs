@@ -1,0 +1,60 @@
+<%- include('_top') %>
+<h1>Team</h1>
+<p class="muted">Give people their own sign-in with only the access they need. Each person's actions appear under <a href="/admin/activity">Activity</a>, and anything deleted goes to the <a href="/admin/trash">Recycle bin</a> first.</p>
+
+<section class="card flush">
+<table>
+  <thead><tr><th>Person</th><th>Role</th><th>Last sign-in</th><th>Status</th><th></th></tr></thead>
+  <tbody>
+    <tr><td><strong><%= owner %></strong><div class="muted small">you · password is ADMIN_PASSWORD in Render</div></td><td><span class="tag published">Owner</span></td><td class="small muted">—</td><td><span class="tag published">active</span></td><td></td></tr>
+    <% users.forEach(u => { %>
+    <tr>
+      <td><strong><%= u.username %></strong><% if (u.name) { %><div class="muted small"><%= u.name %></div><% } %></td>
+      <td>
+        <form method="post" action="/admin/team/<%= u.id %>" class="row"><input type="hidden" name="act" value="role">
+          <select name="role" onchange="this.form.submit()" aria-label="Role for <%= u.username %>"><% ['admin','editor','writer'].forEach(r => { %><option value="<%= r %>" <%= u.role === r ? 'selected' : '' %>><%= ROLES[r].name %></option><% }) %></select>
+        </form>
+      </td>
+      <td class="small nowrap"><%= u.last_login || 'never' %></td>
+      <td><span class="tag <%= u.active ? 'published' : 'err' %>"><%= u.active ? 'active' : 'switched off' %></span></td>
+      <td class="nowrap actions">
+        <details><summary class="linkbtn">New password</summary>
+          <form method="post" action="/admin/team/<%= u.id %>" class="row" style="margin-top:6px"><input type="hidden" name="act" value="password"><input name="password" type="password" autocomplete="new-password" minlength="10" required placeholder="10+ characters"><button class="btn ghost">Set</button></form>
+        </details>
+        <form method="post" action="/admin/team/<%= u.id %>"><input type="hidden" name="act" value="toggle"><button class="linkbtn"><%= u.active ? 'Switch off' : 'Switch on' %></button></form>
+        <form method="post" action="/admin/team/<%= u.id %>" onsubmit="return confirm('Remove <%= u.username %>? Their past actions stay in Activity.')"><input type="hidden" name="act" value="remove"><button class="linkbtn danger">Remove</button></form>
+      </td>
+    </tr>
+    <% }) %>
+  </tbody>
+</table>
+<% if (!users.length) { %><p class="muted pad">No team members yet.</p><% } %>
+</section>
+
+<section class="card">
+  <h2>Add a person</h2>
+  <form method="post" action="/admin/team/add" class="pform" autocomplete="off">
+    <div class="grid2">
+      <label>Username (they sign in with this)<input name="username" required pattern="[A-Za-z0-9._\-]{3,30}" placeholder="e.g. rahul" autocomplete="off"></label>
+      <label>Name (optional)<input name="name" placeholder="Rahul Kumar" autocomplete="off"></label>
+      <label>Role<select name="role" required><option value="writer">Writer</option><option value="editor">Editor</option><option value="admin">Admin</option></select></label>
+      <label>Password (10+ characters — send it to them privately)<input name="password" type="password" required minlength="10" autocomplete="new-password"></label>
+    </div>
+    <button class="btn">Add person</button>
+  </form>
+</section>
+
+<section class="card">
+  <h2>What each role can do</h2>
+  <table>
+    <thead><tr><th></th><th>Write drafts</th><th>Publish / edit live posts</th><th>Delete posts</th><th>Import Excel · share to social</th><th>Settings · social accounts · alerts</th><th>Team · API · Keep settings</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Owner</strong></td><td>✓</td><td>✓</td><td>✓ (to bin) · empty bin</td><td>✓</td><td>✓</td><td>✓</td></tr>
+      <tr><td><strong>Admin</strong></td><td>✓</td><td>✓</td><td>✓ (to bin, max 25 at once) · restore</td><td>✓</td><td>✓</td><td>—</td></tr>
+      <tr><td><strong>Editor</strong></td><td>✓</td><td>✓</td><td>—</td><td>✓</td><td>—</td><td>—</td></tr>
+      <tr><td><strong>Writer</strong></td><td>✓</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+    </tbody>
+  </table>
+  <p class="muted small">Changing someone's role or password, or switching them off, signs them out immediately. On Render's free plan, team members are wiped on restart like other settings — after adding people, copy <a href="/admin/keep-settings">Keep settings</a> into Render again (it includes ADMIN_USERS, with passwords stored only as scrambled hashes).</p>
+</section>
+<%- include('_bottom') %>

@@ -165,6 +165,7 @@ function settingsAsEnv() {
   }
   const sources = db.prepare('SELECT name, list_url, link_selector, content_selector, enabled FROM sources ORDER BY id').all();
   if (sources.length) lines.push(`IMPORT_SOURCES=${envQuote(JSON.stringify(sources))}`);
+  try { const users = require('./auth').exportUsers(); if (users.length) lines.push(`ADMIN_USERS=${envQuote(JSON.stringify(users))}`); } catch {}
   return lines.join('\n');
 }
 // Auto-import sources listed in IMPORT_SOURCES come back after a disk wipe

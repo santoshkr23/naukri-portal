@@ -144,6 +144,7 @@ router.post('/posts', async (req, res) => {
     const saved = old ? savePost({ ...p, slug: old.slug, featured: p.featured || !!old.featured }, old.id) : savePost(p);
     if (saved.status === 'published') require('../scraper').pingIndexNow([saved.slug]).catch(() => {});
     log('info', `API: ${old ? 'updated' : 'created'} "${saved.title}" (${saved.status})`);
+    require('../audit').record('API', old ? 'edited' : 'created', saved, saved.status);
     results.push({ ok: true, action: old ? 'updated' : 'created', ...pub(saved) });
   }
   const single = !Array.isArray(req.body) && !Array.isArray(req.body?.posts);
@@ -174,17 +175,15 @@ router.patch('/posts/:id', (req, res) => {
   if (!/^(publish|published|draft|unpublish)$/.test(st)) return res.status(400).json({ ok: false, error: 'Send { "status": "publish" } or { "status": "draft" } — to change content, POST the post again' });
   const saved = savePost({ ...p, status: /^publish/.test(st) ? 'published' : 'draft' }, p.id);
   log('info', `API: ${saved.status === 'published' ? 'published' : 'unpublished'} "${saved.title}"`);
+  require('../audit').record('API', saved.status === 'published' ? 'published' : 'unpublished', saved);
   res.json({ ok: true, ...pub(saved) });
 });
 router.delete('/posts/:id', (req, res) => {
   const p = find(req.params.id);
   if (!p) return res.status(404).json({ ok: false, error: 'Not found' });
-  db.prepare('INSERT OR REPLACE INTO deleted_posts(fingerprint,title) VALUES(?,?)').run(p.fingerprint, p.title);
-  require('../news').deleteNewsFor(p.fingerprint);
-  db.prepare('UPDATE seen_urls SET post_id=NULL WHERE post_id=?').run(p.id);
-  db.prepare('DELETE FROM posts WHERE id=?').run(p.id);
-  log('info', `API: deleted "${p.title}"`);
-  res.json({ ok: true, deleted: p.id });
+  require('../audit').trashPosts([p.id], 'API');
+  log('info', `API: deleted "${p.title}" (in the recycle bin)`);
+  res.json({ ok: true, deleted: p.id, recycle_bin: true });
 });
 router.use((req, res) => res.status(404).json({ ok: false, error: 'Unknown endpoint — see Admin → API for the list' }));
 router.use((err, req, res, next) => res.status(err.type === 'entity.parse.failed' ? 400 : 500).json({ ok: false, error: err.type === 'entity.parse.failed' ? 'Body is not valid JSON' : 'Server error' }));

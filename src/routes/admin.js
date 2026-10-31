@@ -1,6 +1,7 @@
 const express = require('express');
 const { db, CATEGORIES, getSettings, setSetting, log } = require('../db');
-const { checkLogin, setSession, clearSession, requireAdmin } = require('../auth');
+const { checkLogin, setSession, clearSession, requireAdmin, need, can, ROLES, hashPassword, passwordProblem } = require('../auth');
+const audit = require('../audit');
 const { getById, savePost } = require('../posts');
 const { parseRows, rowsToText, parseLines, parseDateLoose, truncate } = require('../util');
 const scraper = require('../scraper');
@@ -10,14 +11,30 @@ router.use((req, res, next) => { res.set('X-Robots-Tag', 'noindex, nofollow'); r
 
 router.get('/login', (req, res) => res.render('admin/login', { error: null }));
 router.post('/login', (req, res) => {
-  const err = checkLogin(req, req.body.user || '', req.body.pass || '');
-  if (err) return res.status(401).render('admin/login', { error: err });
-  setSession(res, req.secure);
+  const r = checkLogin(req, req.body.user || '', req.body.pass || '');
+  if (r.error) { audit.record(String(req.body.user || '?').slice(0, 40), 'login failed', null, req.ip); return res.status(401).render('admin/login', { error: r.error }); }
+  setSession(res, req.secure, r.user);
+  audit.record({ user: r.user, ip: req.ip }, 'signed in');
   res.redirect('/admin');
 });
 router.post('/logout', (req, res) => { clearSession(res); res.redirect('/admin/login'); });
 
 router.use(requireAdmin);
+
+// ---------- who may open what (each role's list is in src/auth.js) ----------
+const RULES = [
+  [/^\/(launch)/, 'launch'], [/^\/(sources|run-all)/, 'sources'], [/^\/import-url/, 'import'], [/^\/import/, 'import'],
+  [/^\/social\/(share|preview)/, 'social.share'], [/^\/social/, 'social.settings'],
+  [/^\/notifications\/(send|run)/, 'notifications.send'], [/^\/notifications/, 'notifications.settings'],
+  [/^\/api/, 'api'], [/^\/keep-settings/, 'keep'], [/^\/settings/, 'settings'], [/^\/logs/, 'logs'],
+  [/^\/team/, 'users'], [/^\/activity/, 'activity'], [/^\/trash\/\d+\/purge/, 'trash.purge'], [/^\/trash/, 'trash'],
+  [/^\/posts\/\d+\/delete/, 'posts.delete'], [/^\/posts\/\d+\/status/, 'posts.publish'], [/^\/posts/, 'posts.view']
+];
+router.use((req, res, next) => {
+  if (req.path.startsWith('/account')) return next(); // everyone can change their own password
+  const rule = RULES.find(([re]) => re.test(req.path));
+  return rule ? need(rule[1])(req, res, next) : next();
+});
 
 const flash = (res, msg) => res.redirect(`${res.req.baseUrl}${res.req.path === '/' ? '' : ''}?msg=${encodeURIComponent(msg)}`);
 
@@ -27,7 +44,7 @@ router.get('/', (req, res) => {
   const today = db.prepare("SELECT COUNT(*) c FROM posts WHERE created_at >= datetime('now','-1 day')").get().c;
   const sources = db.prepare('SELECT * FROM sources ORDER BY id').all();
   const logs = db.prepare('SELECT * FROM logs ORDER BY id DESC LIMIT 15').all();
-  const lcBad = require('../launch').checks(req).filter(x => x.status === 'bad').length;
+  const lcBad = can(req.user, 'launch') ? require('../launch').checks(req).filter(x => x.status === 'bad').length : 0;
   res.render('admin/dashboard', { counts, byCat, today, sources, logs, running: scraper.isRunning(), msg: req.query.msg, lcBad });
 });
 
@@ -64,13 +81,8 @@ router.get('/posts', (req, res) => {
     today: new Date().toISOString().slice(0, 10) });
 });
 
-function deletePosts(ids) {
-  const get = db.prepare('SELECT title, fingerprint FROM posts WHERE id=?');
-  const remember = db.prepare('INSERT OR REPLACE INTO deleted_posts(fingerprint,title) VALUES(?,?)');
-  const unlink = db.prepare('UPDATE seen_urls SET post_id=NULL WHERE post_id=?');
-  const del = db.prepare('DELETE FROM posts WHERE id=?');
-  db.transaction(list => { for (const id of list) { const p = get.get(id); if (!p) continue; if (p.fingerprint) { remember.run(p.fingerprint, p.title); require('../news').deleteNewsFor(p.fingerprint); } unlink.run(id); del.run(id); } })(ids);
-}
+// Deleting moves posts to the recycle bin (restorable for 30 days)
+const deletePosts = (ids, req) => audit.trashPosts(ids, req);
 
 router.post('/posts/bulk', (req, res) => {
   const back = '/admin/posts' + (req.body.back ? '?' + String(req.body.back).replace(/(^|&)msg=[^&]*/g, '') : '');
@@ -83,13 +95,20 @@ router.post('/posts/bulk', (req, res) => {
   if (!ids.length) return go('Tick at least one post first.');
 
   const action = req.body.action;
-  if (action === 'delete') { deletePosts(ids); return go(`Deleted ${ids.length} post${ids.length > 1 ? 's' : ''}.`); }
+  const perm = { delete: 'posts.delete', publish: 'posts.publish', draft: 'posts.publish', share: 'social.share' }[action];
+  if (perm && !can(req.user, perm)) return go(`✗ Your role (${ROLES[req.user.role].name}) can't ${action === 'draft' ? 'unpublish' : action} posts — ask the owner.`);
+  if (action === 'delete') {
+    if (ids.length > 25 && req.user.role !== 'owner') return go('✗ Only the owner can delete more than 25 posts at once.');
+    const n = deletePosts(ids, req);
+    return go(`Moved ${n} post${n === 1 ? '' : 's'} to the recycle bin — restore them from Recycle bin within 30 days.`);
+  }
   if (action === 'publish' || action === 'draft') {
     let done = 0, empty = 0; const live = [];
     for (const id of ids) {
       const p = getById(id); if (!p || p.status === action || (action === 'draft' && p.status !== 'published')) continue;
       if (action === 'publish' && !(p.data.dates || []).length && !(p.data.links || []).length) { empty++; continue; } // nothing to show yet
       const saved = savePost({ ...p, status: action === 'publish' ? 'published' : 'draft' }, id); done++;
+      audit.record(req, action === 'publish' ? 'published' : 'unpublished', saved);
       if (action === 'publish') live.push(saved.slug);
     }
     if (live.length) scraper.pingIndexNow(live).catch(() => {});
@@ -99,6 +118,7 @@ router.post('/posts/bulk', (req, res) => {
   if (action === 'share') {
     const news = social.newsIdsFor(ids);
     const n = social.enqueue(news);
+    audit.record(req, 'shared to social', null, `${n} stories queued`);
     const ready = Object.keys(social.PLATFORMS).filter(p => social.cfg()[p].ready).length;
     return go(ready ? `Queued ${n} news stor${n === 1 ? 'y' : 'ies'} for social media (${news.length - n} already queued). A few are posted every 5 minutes — see Social media.`
       : 'No social account is set up yet — go to Social media first.');
@@ -145,26 +165,29 @@ function formToPost(b) {
   };
 }
 
-router.post('/posts/save', (req, res) => {
+router.post('/posts/save', need('posts.edit'), (req, res) => {
   const p = formToPost(req.body);
   if (!p.title) return res.render('admin/post-form', { post: { ...blank, ...p, id: req.body.id || null }, rowsToText, msg: 'Title is required.' });
-  if (req.body.id) {
-    const old = getById(+req.body.id);
-    if (old) { const keep = { ...old.data }; delete keep.auto; p.data = { ...keep, ...p.data }; }
+  const old = req.body.id ? getById(+req.body.id) : null;
+  if (old) { const keep = { ...old.data }; delete keep.auto; p.data = { ...keep, ...p.data }; }
+  if (!can(req.user, 'posts.publish')) {
+    if (old && old.status === 'published') return res.render('admin/post-form', { post: { ...old, ...p, id: old.id }, rowsToText, msg: '✗ This post is live — only an Editor, Admin or the Owner can change it. Ask one of them.' });
+    p.status = 'draft'; p.featured = false;
   }
-  const saved = savePost(p, req.body.id ? +req.body.id : null);
+  const saved = savePost(p, old ? old.id : null);
+  audit.record(req, old ? (old.status !== saved.status ? (saved.status === 'published' ? 'published' : 'unpublished') : 'edited') : 'created', saved, saved.status);
   if (saved.status === 'published') scraper.pingIndexNow([saved.slug]).catch(() => {});
   res.redirect(`/admin/posts/${saved.id}?msg=Saved`);
 });
 router.post('/posts/:id/status', (req, res) => {
   const post = getById(+req.params.id);
   const to = (req.query.to || req.body.status) === 'published' ? 'published' : 'draft';
-  if (post) savePost({ ...post, status: to }, post.id);
+  if (post) { const saved = savePost({ ...post, status: to }, post.id); audit.record(req, to === 'published' ? 'published' : 'unpublished', saved); }
   res.redirect('/admin/posts' + (req.body.back ? '?' + req.body.back : ''));
 });
 router.post('/posts/:id/delete', (req, res) => {
-  deletePosts([+req.params.id]);
-  res.redirect('/admin/posts' + (req.body.back ? '?' + String(req.body.back).replace(/(^|&)msg=[^&]*/g, '') + '&' : '?') + 'msg=Deleted');
+  deletePosts([+req.params.id], req);
+  res.redirect('/admin/posts' + (req.body.back ? '?' + String(req.body.back).replace(/(^|&)msg=[^&]*/g, '') + '&' : '?') + 'msg=' + encodeURIComponent('Moved to the recycle bin'));
 });
 
 // ---------- Sources ----------
@@ -179,6 +202,7 @@ router.post('/sources/save', (req, res) => {
   else db.prepare('INSERT INTO sources(name,list_url,link_selector,content_selector,enabled) VALUES(?,?,?,?,?)').run(name || new URL(list_url).hostname, list_url, link_selector || null, content_selector || null, enabled);
   res.redirect('/admin/sources?msg=Source saved');
 });
+router.post('/sources/:id/delete', (req, res, next) => { audit.record(req, 'removed an auto-import source', null, String(req.params.id)); next(); });
 router.post('/sources/:id/delete', (req, res) => { db.prepare('DELETE FROM sources WHERE id=?').run(+req.params.id); res.redirect('/admin/sources?msg=Source removed'); });
 router.post('/sources/:id/run', (req, res) => {
   const src = db.prepare('SELECT * FROM sources WHERE id=?').get(+req.params.id);
@@ -210,6 +234,7 @@ router.post('/import', upload.single('file'), async (req, res) => {
     if (!src) return res.render('admin/import', { report: null, hasFile: false, msg: 'Choose an .xlsx file first.' });
     if (req.file && !/\.xlsx$/i.test(req.file.originalname)) return res.render('admin/import', { report: null, hasFile: excel.hasDefaultFile(), msg: 'Only .xlsx files can be imported.' });
     const report = await excel.importWorkbook(src);
+    audit.record(req, 'imported Excel', null, `${report.created.length} new, ${report.updated.length} updated${req.file ? ' — ' + req.file.originalname : ''}`);
     const fresh = db.prepare("SELECT slug FROM posts WHERE status='published' AND updated_at >= datetime('now','-2 minutes')").all().map(r => r.slug);
     if (fresh.length) scraper.pingIndexNow(fresh).catch(() => {});
     res.render('admin/import', { report, hasFile: excel.hasDefaultFile(), msg: null });
@@ -266,6 +291,7 @@ function saveSocial(req) {
   setSetting('graph_version', String(req.body.graph_version || '').trim());
   return problems;
 }
+router.post('/social', (req, res, next) => { audit.record(req, 'changed social media settings'); next(); });
 router.post('/social', (req, res) => {
   const problems = saveSocial(req);
   res.redirect('/admin/social?msg=' + encodeURIComponent(problems.length ? `✗ Not saved: ${problems.join(' · ')}. Everything else was saved.` : 'Saved'));
@@ -314,6 +340,7 @@ router.post('/notifications/settings', (req, res) => {
   setSetting('push_quiet', req.body.push_quiet === '1' ? '1' : '0');
   res.redirect('/admin/notifications?msg=Saved');
 });
+router.post('/notifications/send', (req, res, next) => { audit.record(req, 'sent a notification to everyone', null, String(req.body.title || '').slice(0, 80)); next(); });
 router.post('/notifications/send', async (req, res) => {
   const push = require('../push');
   const title = String(req.body.title || '').trim().slice(0, 80), body = String(req.body.body || '').trim().slice(0, 240);
@@ -329,6 +356,88 @@ router.post('/notifications/run', async (req, res) => {
   res.redirect('/admin/notifications?msg=' + encodeURIComponent(r.posts ? `Round-up sent: ${r.posts} new updates to ${r.sent} of ${r.total} subscribers.` : 'No new updates since the last round-up — nothing sent.'));
 });
 
+// ---------- Team (owner only) ----------
+const teamView = (req, res, extra = {}) => res.render('admin/team', { users: db.prepare('SELECT id, username, name, role, active, created_at, last_login FROM users ORDER BY id').all(),
+  owner: process.env.ADMIN_USER || 'admin', msg: req.query.msg, ...extra });
+router.get('/team', (req, res) => teamView(req, res));
+router.post('/team/add', (req, res) => {
+  const username = String(req.body.username || '').trim().toLowerCase(), name = String(req.body.name || '').trim().slice(0, 60), role = req.body.role;
+  if (!/^[a-z0-9._-]{3,30}$/.test(username)) return teamView(req, res, { msg: '✗ Username: 3–30 letters, numbers, dot, dash or underscore.' });
+  if (!['admin', 'editor', 'writer'].includes(role)) return teamView(req, res, { msg: '✗ Choose a role.' });
+  if (username === String(process.env.ADMIN_USER || 'admin').toLowerCase() || db.prepare('SELECT 1 FROM users WHERE username=?').get(username)) return teamView(req, res, { msg: '✗ That username is taken.' });
+  const bad = passwordProblem(req.body.password, username); if (bad) return teamView(req, res, { msg: '✗ ' + bad });
+  db.prepare('INSERT INTO users(username,name,role,pass_hash) VALUES(?,?,?,?)').run(username, name, role, hashPassword(req.body.password));
+  audit.record(req, 'added team member', null, `${username} as ${ROLES[role].name}`);
+  res.redirect('/admin/team?msg=' + encodeURIComponent(`Added ${username} as ${ROLES[role].name}. Send them the address /admin and their password.`));
+});
+router.post('/team/:id', (req, res) => {
+  const u = db.prepare('SELECT * FROM users WHERE id=?').get(+req.params.id);
+  if (!u) return res.redirect('/admin/team');
+  const act = req.body.act;
+  if (act === 'role' && ['admin', 'editor', 'writer'].includes(req.body.role)) {
+    db.prepare('UPDATE users SET role=?, ver=ver+1 WHERE id=?').run(req.body.role, u.id);
+    audit.record(req, 'changed role', null, `${u.username}: ${ROLES[u.role].name} → ${ROLES[req.body.role].name}`);
+    return res.redirect('/admin/team?msg=' + encodeURIComponent(`${u.username} is now ${ROLES[req.body.role].name} (signed out so the change applies).`));
+  }
+  if (act === 'password') {
+    const bad = passwordProblem(req.body.password, u.username); if (bad) return teamView(req, res, { msg: '✗ ' + bad });
+    db.prepare('UPDATE users SET pass_hash=?, ver=ver+1 WHERE id=?').run(hashPassword(req.body.password), u.id);
+    audit.record(req, 'reset password', null, u.username);
+    return res.redirect('/admin/team?msg=' + encodeURIComponent(`New password set for ${u.username} — they were signed out.`));
+  }
+  if (act === 'toggle') {
+    db.prepare('UPDATE users SET active=?, ver=ver+1 WHERE id=?').run(u.active ? 0 : 1, u.id);
+    audit.record(req, u.active ? 'switched off account' : 'switched on account', null, u.username);
+    return res.redirect('/admin/team?msg=' + encodeURIComponent(`${u.username} ${u.active ? 'can no longer sign in (signed out now)' : 'can sign in again'}.`));
+  }
+  if (act === 'remove') {
+    db.prepare('DELETE FROM users WHERE id=?').run(u.id);
+    audit.record(req, 'removed team member', null, u.username);
+    return res.redirect('/admin/team?msg=' + encodeURIComponent(`Removed ${u.username}.`));
+  }
+  res.redirect('/admin/team');
+});
+
+// ---------- My account (everyone) ----------
+router.get('/account', (req, res) => res.render('admin/account', { msg: req.query.msg }));
+router.post('/account', (req, res) => {
+  if (req.user.role === 'owner') return res.redirect('/admin/account?msg=' + encodeURIComponent('The owner password is ADMIN_PASSWORD in Render → Environment — change it there.'));
+  const u = db.prepare('SELECT * FROM users WHERE id=?').get(req.user.id);
+  if (!require('../auth').verifyPassword(req.body.current || '', u.pass_hash)) return res.redirect('/admin/account?msg=' + encodeURIComponent('✗ Current password is wrong.'));
+  const bad = passwordProblem(req.body.password, u.username); if (bad) return res.redirect('/admin/account?msg=' + encodeURIComponent('✗ ' + bad));
+  db.prepare('UPDATE users SET pass_hash=?, ver=ver+1 WHERE id=?').run(hashPassword(req.body.password), u.id);
+  audit.record(req, 'changed own password');
+  setSession(res, req.secure, db.prepare('SELECT * FROM users WHERE id=?').get(u.id));
+  res.redirect('/admin/account?msg=' + encodeURIComponent('Password changed.'));
+});
+
+// ---------- Recycle bin ----------
+router.get('/trash', (req, res) => {
+  audit.autoPurge();
+  res.render('admin/trash', { rows: db.prepare("SELECT id, post_id, title, category, status, deleted_by, deleted_at, CAST(julianday(deleted_at,'+30 days') - julianday('now') AS INTEGER) days_left FROM trash ORDER BY id DESC").all(), msg: req.query.msg });
+});
+router.post('/trash/restore', (req, res) => {
+  const ids = [].concat(req.body.ids || []).map(Number).filter(Boolean);
+  let ok = 0; const errs = [];
+  for (const id of ids) { try { audit.restore(id, req); ok++; } catch (e) { errs.push(e.message); } }
+  res.redirect('/admin/trash?msg=' + encodeURIComponent(`Restored ${ok} post${ok === 1 ? '' : 's'}${ok ? ' — back on the site with the same address' : ''}.${errs.length ? ' ✗ ' + [...new Set(errs)].join(' ') : ''}`));
+});
+router.post('/trash/:id/restore', (req, res) => {
+  try { const p = audit.restore(+req.params.id, req); res.redirect('/admin/trash?msg=' + encodeURIComponent(`Restored “${p.title.slice(0, 60)}”.`)); }
+  catch (e) { res.redirect('/admin/trash?msg=' + encodeURIComponent('✗ ' + e.message)); }
+});
+router.post('/trash/:id/purge', (req, res) => { audit.purge(+req.params.id, req); res.redirect('/admin/trash?msg=' + encodeURIComponent('Deleted for good.')); });
+
+// ---------- Activity ----------
+router.get('/activity', (req, res) => {
+  const who = String(req.query.who || ''), action = String(req.query.action || '');
+  const where = [], args = [];
+  if (who) { where.push('who=?'); args.push(who); }
+  if (action) { where.push('action=?'); args.push(action); }
+  res.render('admin/activity', { rows: db.prepare(`SELECT * FROM audit ${where.length ? 'WHERE ' + where.join(' AND ') : ''} ORDER BY id DESC LIMIT 400`).all(...args),
+    people: db.prepare('SELECT DISTINCT who FROM audit ORDER BY who').all().map(r => r.who), actions: db.prepare('SELECT DISTINCT action FROM audit ORDER BY action').all().map(r => r.action), who, action });
+});
+
 // ---------- Launch checklist ----------
 router.get('/launch', (req, res) => res.render('admin/launch', { items: require('../launch').checks(req) }));
 
@@ -342,6 +451,7 @@ router.get('/api', (req, res) => {
 router.post('/api/key', (req, res) => {
   const api = require('./api');
   const key = api.newKey();
+  audit.record(req, 'made a new API key');
   res.render('admin/api', { configured: true, hint: getSettings().api_key_hint, fromEnv: !!process.env.API_KEY, newKey: key,
     base: require('../db').siteUrl() || `${req.protocol}://${req.get('host')}`, msg: null,
     recent: db.prepare("SELECT created_at, message FROM logs WHERE message LIKE 'API:%' ORDER BY id DESC LIMIT 15").all() });
@@ -349,6 +459,7 @@ router.post('/api/key', (req, res) => {
 router.post('/api/key/delete', (req, res) => { setSetting('api_key_hash', ''); setSetting('api_key_hint', ''); res.redirect('/admin/api?msg=' + encodeURIComponent('Key removed — the API is off unless API_KEY is set in the environment')); });
 
 // ---------- Keep settings across restarts ----------
+router.get('/keep-settings', (req, res, next) => { audit.record(req, 'opened Keep settings (shows tokens)'); next(); });
 router.get('/keep-settings', (req, res) => {
   const { settingsAsEnv } = require('../db');
   res.render('admin/keep-settings', { envText: settingsAsEnv(), onRender: !!(process.env.RENDER || process.env.RENDER_EXTERNAL_URL), msg: req.query.msg });
@@ -364,6 +475,7 @@ router.post('/settings', (req, res) => {
   const keys = ['site_name', 'site_tagline', 'home_intro', 'max_per_run', 'first_run_limit', 'telegram_url', 'whatsapp_url', 'contact_email', 'google_verification', 'ga_id', 'adsense_client'];
   for (const k of keys) setSetting(k, String(req.body[k] ?? '').trim());
   setSetting('auto_publish', req.body.auto_publish === '1' ? '1' : '0');
+  audit.record(req, 'changed settings');
   res.redirect('/admin/settings?msg=Settings saved');
 });
 router.get('/logs', (req, res) => res.render('admin/logs', { logs: db.prepare('SELECT * FROM logs ORDER BY id DESC LIMIT 300').all() }));

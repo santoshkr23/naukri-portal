@@ -36,10 +36,10 @@
     <strong id="selCount">0 selected</strong>
     <span id="selAllWrap" hidden> · <button type="button" class="linkbtn" id="selAll">Select all <%= total %> matching posts</button></span>
     <span class="spacer"></span>
-    <button class="btn ghost" name="action" value="publish">Publish</button>
-    <button class="btn ghost" name="action" value="draft">Unpublish</button>
-    <button class="btn ghost" name="action" value="share" title="Posts each one's news story with its image to your social accounts">Share to social</button>
-    <button class="btn danger" name="action" value="delete" onclick="return confirm(document.getElementById('selCount').textContent.replace('selected','') + ' will be deleted. This cannot be undone. Continue?')">Delete</button>
+    <% if (can('posts.publish')) { %><button class="btn ghost" name="action" value="publish">Publish</button>
+    <button class="btn ghost" name="action" value="draft">Unpublish</button><% } %>
+    <% if (can('social.share')) { %><button class="btn ghost" name="action" value="share" title="Posts each one's news story with its image to your social accounts">Share to social</button><% } %>
+    <% if (can('posts.delete')) { %><button class="btn danger" name="action" value="delete" onclick="return confirm(document.getElementById('selCount').textContent.replace('selected','') + ' will be moved to the recycle bin (restorable for 30 days). Continue?')">Delete</button><% } %>
   </div>
 
   <div class="card flush">
@@ -65,8 +65,8 @@
         <td class="nowrap small"><%= p.created_at %></td>
         <td class="nowrap actions">
           <a href="<%= p.status === 'published' ? '/' + p.slug + '/' : '/admin/posts/' + p.id + '/preview' %>" target="_blank">View</a>
-          <button class="linkbtn" formaction="/admin/posts/<%= p.id %>/status?to=<%= p.status==='published'?'draft':'published' %>"><%= p.status==='published'?'Unpublish':'Publish' %></button>
-          <button class="linkbtn danger" formaction="/admin/posts/<%= p.id %>/delete" onclick="return confirm('Delete this post?')">Delete</button>
+          <% if (can('posts.publish')) { %><button class="linkbtn" formaction="/admin/posts/<%= p.id %>/status?to=<%= p.status==='published'?'draft':'published' %>"><%= p.status==='published'?'Unpublish':'Publish' %></button><% } %>
+          <% if (can('posts.delete')) { %><button class="linkbtn danger" formaction="/admin/posts/<%= p.id %>/delete" onclick="return confirm('Move this post to the recycle bin?')">Delete</button><% } %>
         </td>
       </tr>
     <% }) %>

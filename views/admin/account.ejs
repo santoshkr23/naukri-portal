@@ -1,0 +1,21 @@
+<%- include('_top') %>
+<h1>My account</h1>
+<section class="card">
+  <p>Signed in as <strong><%= user.username %></strong> — <span class="tag published"><%= ROLES[user.role].name %></span></p>
+  <p class="muted"><%= ROLES[user.role].about %></p>
+</section>
+<% if (user.role !== 'owner') { %>
+<section class="card">
+  <h2>Change my password</h2>
+  <form method="post" action="/admin/account" class="pform" autocomplete="off">
+    <div class="grid2">
+      <label>Current password<input name="current" type="password" required autocomplete="current-password"></label>
+      <label>New password (10+ characters)<input name="password" type="password" required minlength="10" autocomplete="new-password"></label>
+    </div>
+    <button class="btn">Change password</button>
+  </form>
+</section>
+<% } else { %>
+<section class="card"><p class="muted">The owner's username and password are <code>ADMIN_USER</code> and <code>ADMIN_PASSWORD</code> in Render → Environment. Changing the password there signs you out everywhere.</p></section>
+<% } %>
+<%- include('_bottom') %>
