@@ -68,3 +68,11 @@ If a source's pages aren't parsed well, set its **content selector** (e.g. `arti
 - The importer keeps facts and official links only. Don't change it to copy other sites' write-ups or images: that infringes copyright, and Google demotes duplicate content.
 - Never use another site's brand name or logo. "Sarkari Result", for example, is a registered trademark. Pick your own name in Settings.
 - This is an information site. Keep the disclaimer and tell users to verify on the official website.
+
+## Credits and licences
+
+- Fonts in `assets/fonts/`: Hind, Anton and Baloo 2 — SIL Open Font License 1.1 (licence files alongside). Pages also load Hind and Archivo from Google Fonts (OFL).
+- Banners, news cards, icons and the favicon are drawn by this project's own code — no third-party images or logos.
+- Job content is facts (dates, fees, numbers, official links) written up in this site's own words. Don't paste articles, images or logos from other sites.
+- Choose a site name that isn't someone else's trademark — e.g. "Naukri" (Naukri.com) and "Sarkari Result" are registered marks that have been enforced in court.
+

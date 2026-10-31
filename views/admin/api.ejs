@@ -1,0 +1,84 @@
+<%- include('_top') %>
+<h1>API — post from n8n, Make or an AI agent</h1>
+<p class="muted">Send a job as JSON and the site builds it exactly like an Excel row: same wording, colourful banner, Hindi news story and social media posting. Sending the same title again updates that post instead of duplicating it.</p>
+
+<section class="card">
+  <h2>1. API key</h2>
+  <% if (newKey) { %>
+    <div class="flash">Copy this key now — it is shown only once.</div>
+    <p><input id="key" value="<%= newKey %>" readonly style="font-family: ui-monospace, monospace"> <button type="button" class="btn" onclick="navigator.clipboard.writeText(document.getElementById('key').value);this.textContent='Copied'">Copy</button></p>
+    <p class="muted small">On Render's free plan, keep it across restarts: open <a href="/admin/keep-settings">Keep settings</a> and paste the lines into Render (it includes <code>API_KEY_HASH</code>), or add <code>API_KEY</code> = this key in Render → Environment.</p>
+  <% } else if (configured) { %>
+    <p>API is <span class="tag published">on</span> <% if (hint) { %>— key <code><%= hint %></code><% } %><% if (fromEnv) { %> · also accepts <code>API_KEY</code> from the environment<% } %></p>
+  <% } else { %>
+    <p>API is <span class="tag draft">off</span> — create a key to turn it on.</p>
+  <% } %>
+  <div class="row">
+    <form method="post" action="/admin/api/key" onsubmit="return <%= configured ? "confirm('Make a new key? The old key stops working.')" : 'true' %>"><button class="btn"><%= configured ? 'Make a new key' : 'Create API key' %></button></form>
+    <% if (hint) { %><form method="post" action="/admin/api/key/delete" onsubmit="return confirm('Remove the key? Automations using it will stop.')"><button class="btn ghost">Remove key</button></form><% } %>
+  </div>
+</section>
+
+<section class="card">
+  <h2>2. Endpoints</h2>
+  <p class="muted small">Base address: <code><%= base %>/api/v1</code> · send the header <code>Authorization: Bearer &lt;your key&gt;</code> · max 120 requests a minute.</p>
+  <table>
+    <thead><tr><th>Method</th><th>Address</th><th>What it does</th></tr></thead>
+    <tbody>
+      <tr><td><code>POST</code></td><td><code>/api/v1/posts</code></td><td>Create or update a post (one object, an array, or <code>{"posts":[…]}</code>, up to 50). Add <code>?dry_run=1</code> to check without saving.</td></tr>
+      <tr><td><code>GET</code></td><td><code>/api/v1/posts?section=latest-jobs&amp;status=draft&amp;q=ssc</code></td><td>List posts</td></tr>
+      <tr><td><code>GET</code></td><td><code>/api/v1/posts/{id or slug}</code></td><td>One post with all its data</td></tr>
+      <tr><td><code>PATCH</code></td><td><code>/api/v1/posts/{id}</code></td><td><code>{"status":"publish"}</code> or <code>{"status":"draft"}</code></td></tr>
+      <tr><td><code>DELETE</code></td><td><code>/api/v1/posts/{id}</code></td><td>Delete a post (and its news story)</td></tr>
+      <tr><td><code>GET</code></td><td><code>/api/v1/ping</code> · <code>/api/v1/sections</code></td><td>Check the key works · list section names</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section class="card">
+  <h2>3. What to send</h2>
+  <p class="muted small">Fields mirror your Excel columns. Lists can be JSON arrays, objects, or text with one item per line (<code>Label: value</code>). Only <code>section</code>, <code>title</code>, <code>links</code> and — for jobs — <code>last_date</code> are required.</p>
+<pre class="code">{
+  "section": "latest-jobs",
+  "title": "SSC GD Constable Recruitment 2026",
+  "organisation": "Staff Selection Commission (SSC)",
+  "advt": "HQ-C-3301/1/2026",
+  "total_posts": 39481,
+  "last_date": "2026-12-15",
+  "dates": { "Apply online starts": "16 November 2026", "Last date to apply": "15 December 2026", "Exam date": "To be announced" },
+  "fees": { "General / OBC": "₹100", "SC / ST / Female": "No fee" },
+  "min_age": "18 years", "max_age": "23 years",
+  "vacancy": { "BSF": 15654, "CISF": 7145, "CRPF": 11541 },
+  "eligibility": ["10th pass from a recognised board"],
+  "pay": { "Pay level": "Level 3 — ₹21,700 – ₹69,100" },
+  "selection": ["Computer based test", "Physical test", "Medical"],
+  "links": { "Apply online": "https://ssc.gov.in/", "Official notification (PDF)": "https://ssc.gov.in/…pdf" },
+  "short_info": "Optional: your own intro text",
+  "faqs": [{ "q": "Can 12th pass apply?", "a": "Yes, the minimum is 10th pass." }],
+  "status": "publish"
+}</pre>
+  <p class="muted small">Other sections (<code>admit-card</code>, <code>result</code>, <code>answer-key</code>, <code>admission</code>, <code>syllabus</code>, <code>exam-date</code>, <code>certificate</code>, <code>outsourcing</code>, <code>important</code>) take <code>title</code>, <code>organisation</code>, <code>dates</code>, <code>links</code> and optionally <code>login</code>, <code>next_stages</code>, <code>fees</code>, <code>eligibility</code>, <code>exam_pattern</code> (rows like <code>"Subject | Questions | Marks"</code>), <code>marking</code>, <code>topics</code>. Jobs whose last date has passed are refused unless you add <code>"allow_closed": true</code>. Send <code>"status": "draft"</code> to review in the admin before publishing.</p>
+  <p class="muted small">Try it from a terminal:</p>
+<pre class="code">curl -X POST <%= base %>/api/v1/posts?dry_run=1 \
+  -H "Authorization: Bearer YOUR_KEY" -H "Content-Type: application/json" \
+  -d '{"section":"latest-jobs","title":"Test Job 2026","last_date":"2026-12-31","links":{"Official website":"https://example.gov.in/"}}'</pre>
+</section>
+
+<section class="card">
+  <h2>4. In n8n</h2>
+  <ol class="steps-list">
+    <li>Add an <strong>HTTP Request</strong> node → Method <strong>POST</strong> → URL <code><%= base %>/api/v1/posts</code>.</li>
+    <li>Authentication: <strong>Generic → Header Auth</strong> → Name <code>Authorization</code>, Value <code>Bearer YOUR_KEY</code>.</li>
+    <li>Send Body: <strong>JSON</strong>, and map your fields (from an AI node, RSS, Google Sheet…) into the shape above.</li>
+    <li>Tip: have the AI node output exactly this JSON, run once with <code>?dry_run=1</code>, then remove it. Start with <code>"status": "draft"</code> until you trust the flow.</li>
+    <li>The reply gives the post's <code>url</code>, <code>banner</code> and <code>news_url</code> — use them in later nodes.</li>
+  </ol>
+  <p class="muted small">Facts only: dates, fees, numbers and official links. Don't send articles copied from other websites — the site writes its own wording.</p>
+</section>
+
+<% if (recent.length) { %>
+<section class="card flush"><h2 class="pad" style="margin:0">Recent API activity</h2>
+  <table><tbody><% recent.forEach(l => { %><tr><td class="nowrap small"><%= l.created_at %></td><td><%= l.message %></td></tr><% }) %></tbody></table>
+</section>
+<% } %>
+<%- include('_bottom') %>

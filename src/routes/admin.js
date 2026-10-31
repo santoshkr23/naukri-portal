@@ -27,7 +27,8 @@ router.get('/', (req, res) => {
   const today = db.prepare("SELECT COUNT(*) c FROM posts WHERE created_at >= datetime('now','-1 day')").get().c;
   const sources = db.prepare('SELECT * FROM sources ORDER BY id').all();
   const logs = db.prepare('SELECT * FROM logs ORDER BY id DESC LIMIT 15').all();
-  res.render('admin/dashboard', { counts, byCat, today, sources, logs, running: scraper.isRunning(), msg: req.query.msg });
+  const lcBad = require('../launch').checks(req).filter(x => x.status === 'bad').length;
+  res.render('admin/dashboard', { counts, byCat, today, sources, logs, running: scraper.isRunning(), msg: req.query.msg, lcBad });
 });
 
 // ---------- Posts ----------
@@ -297,6 +298,25 @@ router.get('/social/preview/:id/:kind.jpg', async (req, res, next) => {
   const img = await social.postImage(p);
   res.type('jpg').sendFile(img[req.params.kind].file);
 });
+
+// ---------- Launch checklist ----------
+router.get('/launch', (req, res) => res.render('admin/launch', { items: require('../launch').checks(req) }));
+
+// ---------- API ----------
+router.get('/api', (req, res) => {
+  const api = require('./api');
+  res.render('admin/api', { configured: api.keyConfigured(), hint: getSettings().api_key_hint, fromEnv: !!process.env.API_KEY, newKey: null,
+    base: require('../db').siteUrl() || `${req.protocol}://${req.get('host')}`, msg: req.query.msg,
+    recent: db.prepare("SELECT created_at, message FROM logs WHERE message LIKE 'API:%' ORDER BY id DESC LIMIT 15").all() });
+});
+router.post('/api/key', (req, res) => {
+  const api = require('./api');
+  const key = api.newKey();
+  res.render('admin/api', { configured: true, hint: getSettings().api_key_hint, fromEnv: !!process.env.API_KEY, newKey: key,
+    base: require('../db').siteUrl() || `${req.protocol}://${req.get('host')}`, msg: null,
+    recent: db.prepare("SELECT created_at, message FROM logs WHERE message LIKE 'API:%' ORDER BY id DESC LIMIT 15").all() });
+});
+router.post('/api/key/delete', (req, res) => { setSetting('api_key_hash', ''); setSetting('api_key_hint', ''); res.redirect('/admin/api?msg=' + encodeURIComponent('Key removed — the API is off unless API_KEY is set in the environment')); });
 
 // ---------- Keep settings across restarts ----------
 router.get('/keep-settings', (req, res) => {

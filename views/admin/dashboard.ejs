@@ -1,5 +1,6 @@
 <%- include('_top') %>
 <h1>Dashboard</h1>
+<% if (typeof lcBad !== 'undefined' && lcBad) { %><div class="flash err"><strong><%= lcBad %> launch item<%= lcBad > 1 ? 's' : '' %> need attention</strong> before the site goes public — <a href="/admin/launch">open the Launch checklist</a>.</div><% } %>
 <% const c = Object.fromEntries(counts.map(r => [r.status, r.c])); %>
 <div class="stats">
   <div class="card stat"><span>Published</span><strong><%= c.published || 0 %></strong></div>

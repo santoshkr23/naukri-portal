@@ -11,7 +11,7 @@
     "seed:jobs": "node src/seed-jobs.js",
     "import:excel": "node src/excel-import.js",
     "export:preview": "node scripts/export-preview.js",
-    "test": "node test/run.js && node test/social.js"
+    "test": "node test/run.js && node test/social.js && node test/api.js"
   },
   "engines": {
     "node": "22.x"

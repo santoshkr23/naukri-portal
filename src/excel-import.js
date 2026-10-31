@@ -300,4 +300,4 @@ if (require.main === module) {
   }).catch(e => { console.error(e.message); process.exit(1); });
 }
 
-module.exports = { importWorkbook, DEFAULT_FILE, hasDefaultFile: () => fs.existsSync(DEFAULT_FILE) };
+module.exports = { importWorkbook, DEFAULT_FILE, hasDefaultFile: () => fs.existsSync(DEFAULT_FILE), personalise, splitTitle, tidyDates, longDate };

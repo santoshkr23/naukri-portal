@@ -1,0 +1,21 @@
+<%- include('_top') %>
+<% const done = items.filter(i => i.status === 'ok').length, need = items.filter(i => i.status !== 'info').length;
+   const groups = [...new Set(items.map(i => i.group))]; %>
+<h1>Launch checklist</h1>
+<p class="muted">Live checks of what the site needs to go public and grow. Fix the red ones first.</p>
+<section class="card">
+  <div class="launch-score"><strong><%= done %> / <%= need %></strong> ready
+    <div class="bar"><span style="width: <%= Math.round(done / need * 100) %>%"></span></div>
+  </div>
+</section>
+<% groups.forEach(g => { %>
+<section class="card status-list">
+  <h2><%= g %></h2>
+  <ul>
+    <% items.filter(i => i.group === g).forEach(i => { %>
+      <li class="<%= { ok: 'ok', warn: 'warn', bad: 'bad', info: 'info' }[i.status] %>"><strong><%= i.title %></strong> — <%= i.detail %><% if (i.link) { %> <a href="<%= i.link %>">Open →</a><% } %></li>
+    <% }) %>
+  </ul>
+</section>
+<% }) %>
+<%- include('_bottom') %>

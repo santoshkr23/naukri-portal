@@ -1,4 +1,4 @@
-// News section: a short Hindi news story (Jagran-style: "English keyword: Hindi headline") is written automatically
+// News section: a short Hindi news story (newspaper-style: "English keyword: Hindi headline") is written automatically
 // for every published update on the site — jobs, admit cards, results, answer keys and so on.
 // It is written from the post's own facts in this site's words; nothing is copied from news sites.
 // Admin edits to a news post are kept: once edited, a story is no longer regenerated.

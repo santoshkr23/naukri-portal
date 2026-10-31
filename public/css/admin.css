@@ -92,3 +92,9 @@ th.ck,td.ck{width:34px;padding-right:0}
 
 /* Long addresses and codes wrap instead of sticking out */
 code,.small,td,.flash{overflow-wrap:anywhere}
+
+pre.code{background:#0f172a;color:#e2e8f0;padding:12px 14px;border-radius:8px;overflow-x:auto;font-size:12.5px;line-height:1.5;white-space:pre}
+.launch-score{font-size:18px}
+.launch-score .bar{height:10px;background:#e6ecea;border-radius:99px;margin-top:8px;overflow:hidden}
+.launch-score .bar span{display:block;height:100%;background:#15803d}
+.status-list li.info::before{content:"i";color:#0a5c8a;left:10px;font-style:italic}

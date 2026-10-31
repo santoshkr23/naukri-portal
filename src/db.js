@@ -82,7 +82,9 @@ const DEFAULT_SETTINGS = {
   contact_email: '',
   google_verification: '',
   ga_id: '',
-  adsense_client: ''
+  adsense_client: '',
+  api_key_hash: '',
+  api_key_hint: ''
 };
 
 // Settings saved in the admin live in the database. Hosts that wipe the disk on restart (Render's free plan)

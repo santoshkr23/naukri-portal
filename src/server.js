@@ -16,7 +16,7 @@ app.use(express.urlencoded({ extended: false, limit: '2mb' }));
 
 // Canonical URLs end with a slash: /latest-jobs  ->  /latest-jobs/
 app.use((req, res, next) => {
-  if (req.method === 'GET' && !req.path.endsWith('/') && !req.path.includes('.') && !req.path.startsWith('/admin')) {
+  if (req.method === 'GET' && !req.path.endsWith('/') && !req.path.includes('.') && !req.path.startsWith('/admin') && !req.path.startsWith('/api/')) {
     const q = req.originalUrl.slice(req.path.length);
     return res.redirect(301, req.path + '/' + q);
   }
@@ -52,6 +52,7 @@ app.use((req, res, next) => {
   next();
 });
 
+app.use('/api/v1', require('./routes/api'));
 app.use('/admin', require('./routes/admin'));
 app.use('/', require('./routes/public'));
 

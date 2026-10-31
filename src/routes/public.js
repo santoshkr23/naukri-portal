@@ -32,6 +32,13 @@ router.get('/social/:file', (req, res, next) => {
   res.set('Cache-Control', 'public, max-age=604800').type('jpg').sendFile(f);
 });
 
+// IndexNow key file (Bing/Yandex check it before accepting pings)
+router.get('/:key.txt', (req, res, next) => {
+  const k = process.env.INDEXNOW_KEY;
+  if (!k || req.params.key !== k) return next();
+  res.type('text/plain').send(k);
+});
+
 router.get('/robots.txt', (req, res) => {
   res.type('text/plain').send(`User-agent: *\nAllow: /\nDisallow: /admin/\nDisallow: /search/\n\nSitemap: ${res.locals.baseUrl}/sitemap.xml\n`);
 });
