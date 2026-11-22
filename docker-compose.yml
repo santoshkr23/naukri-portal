@@ -1,0 +1,38 @@
+# Job portal on a VPS, completely separate from any other site on the server.
+# It opens NO public ports: visitors arrive through a Cloudflare Tunnel (free HTTPS, server IP hidden),
+# so it never competes with another site's web server for ports 80/443.
+# Install / update:  bash deploy/install.sh   (settings live in .env next to this file)
+services:
+  naukri:
+    build: .
+    image: naukri-portal:latest
+    container_name: naukri-portal
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DATA_DIR: /data
+      PORT: "3000"
+    volumes:
+      - naukri_data:/data
+      - ./backups:/backups
+    ports:
+      - "127.0.0.1:3100:3000"   # reachable only from the VPS itself, for checks
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }
+
+  tunnel:
+    image: cloudflare/cloudflared:latest
+    container_name: naukri-tunnel
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run
+    environment:
+      TUNNEL_TOKEN: ${TUNNEL_TOKEN:?Set TUNNEL_TOKEN in .env}
+    depends_on:
+      - naukri
+    logging:
+      driver: json-file
+      options: { max-size: "5m", max-file: "2" }
+
+volumes:
+  naukri_data:

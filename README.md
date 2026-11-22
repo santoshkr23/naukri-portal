@@ -41,6 +41,26 @@ npm test                  # end-to-end test with a fictional source site
 
 Three ways to import: **Admin → Import Excel** (upload the file), `npm run import:excel -- path/to/file.xlsx`, or commit a new `content/posts.xlsx` — it is imported every time the server starts (set `IMPORT_EXCEL=0` to turn that off).
 
+## Host on a VPS (Hostinger KVM) next to other sites
+
+The job portal runs in its own Docker containers and opens **no public ports**: visitors arrive through a free
+**Cloudflare Tunnel**, so it never touches another site's web server, ports 80/443 or firewall. Data lives in a Docker
+volume, so posts, settings, team and subscribers survive restarts and updates. A backup of the database is taken every
+night (last 14 kept in `/opt/naukri-portal/backups`).
+
+1. **Domain on Cloudflare:** add your domain to Cloudflare (free plan) and change the nameservers at your registrar.
+2. **Tunnel:** Cloudflare → Zero Trust → Networks → Tunnels → *Create a tunnel* → Cloudflared → name it `naukri-portal`
+   → choose *Docker* and copy the token. Under *Public hostnames* add your domain (and `www`) with
+   service **HTTP** and URL **`naukri:3000`**.
+3. **On the VPS** (Hostinger → VPS → Browser terminal), run:
+   ```
+   curl -fsSL https://raw.githubusercontent.com/santoshkr23/naukri-portal/main/deploy/install.sh | sudo bash
+   ```
+   It asks for the domain, the owner login, the tunnel token and (optionally) the *Keep settings* lines from the old site.
+
+Update later: `sudo bash /opt/naukri-portal/deploy/install.sh` · Logs: `docker logs naukri-portal --tail 50` ·
+Settings: `/opt/naukri-portal/.env` (then `docker compose up -d` in that folder).
+
 ## Deploy (needs an always-on server)
 
 The hourly import needs a process that never sleeps, plus a persistent disk for the SQLite database. GitHub Pages and the free Render tier won't work for this.
